@@ -1,0 +1,67 @@
+/* General Responsive Table Styles */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.table td, .table th {
+    padding: 1rem; /* Adjust padding */
+    font-size: 1rem; /* Ensure text size is consistent */
+}
+
+/* Styling for Table Headers */
+.table th {
+    background-color: #343a40; /* Dark background for header */
+    color: #fff; /* White text color for header */
+}
+
+/* Styling for Striped Tables */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f9f9f9; /* Light gray for odd rows */
+}
+
+/* Empty Table Message */
+.table td[colspan="4"] {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+}
+
+/* Adjust Font Size and Padding for Smaller Screens */
+@media (max-width: 768px) {
+    .table td, .table th {
+        font-size: 0.9rem; /* Slightly smaller font size */
+        padding: 0.5rem; /* Smaller padding on mobile */
+    }
+    .table {
+        font-size: 0.85rem; /* Ensure overall font size scales down */
+    }
+}
+
+/* Additional Custom Styles for Active Sidebar Links */
+.nav-item.active a {
+    font-weight: bold;
+    color: #007bff;
+}
+
+/* Sidebar Hover Effect */
+.nav-item:hover a {
+    color: #0056b3;
+}
+
+/* Making Sidebar More Compact on Mobile */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 250px; /* Adjust the sidebar width for smaller screens */
+    }
+
+    .sidebar .nav-item {
+        display: inline-block; /* Inline the menu items for mobile */
+    }
+
+    .sidebar .nav-item a {
+        padding: 0.75rem; /* Adjust padding for mobile */
+    }
+}

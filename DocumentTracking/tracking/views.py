@@ -21,6 +21,8 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db import IntegrityError
 from django.db import transaction
+from django.contrib.auth.models import User
+from .models import DocumentActivity
 
 
 # User Registration View
@@ -62,8 +64,6 @@ class UserLoginView(LoginView):
 class UserLogoutView(LogoutView):
     next_page = reverse_lazy('login')  # Redirect to login page after logout
 
-from django.contrib.auth.models import User
-from .models import DocumentActivity
 
 class DocumentCreateView(LoginRequiredMixin, CreateView):
     model = Document
@@ -253,7 +253,7 @@ class DocumentUpdateView(LoginRequiredMixin, View):
         return document.initial_department
 
         
-class DocumentListView(ListView):
+class DocumentListView(LoginRequiredMixin, ListView):
     model = Document
     template_name = 'track/document_list.html'
     context_object_name = 'documents'

@@ -65,7 +65,7 @@ class UserLogoutView(LogoutView):
 from django.contrib.auth.models import User
 from .models import DocumentActivity
 
-class DocumentCreateView(CreateView):
+class DocumentCreateView(LoginRequiredMixin, CreateView):
     model = Document
     form_class = DocumentForm
     template_name = 'tracking/document_form.html'
@@ -144,7 +144,7 @@ class DocumentCreateView(CreateView):
         return context
 
 
-class DocumentEditView(UpdateView):
+class DocumentEditView(LoginRequiredMixin, UpdateView):
     model = Document
     form_class = DocumentForm  # Form to use for editing
     template_name = 'tracking/document_edit.html'  # Path to the template
@@ -170,7 +170,7 @@ class DocumentEditView(UpdateView):
         return super().form_invalid(form)
 
     
-class DocumentUpdateView(View):
+class DocumentUpdateView(LoginRequiredMixin, View):
     def post(self, request, pk):
         document = get_object_or_404(Document, pk=pk)
         status = request.POST.get('status')
@@ -407,7 +407,7 @@ class UserLoginView(View):
         return render(request, 'accounts/login.html')
 
 
-class DocumentReceivedView(View):
+class DocumentReceivedView(LoginRequiredMixin, View):
     def post(self, request, pk):
         # Retrieve the most recent DocumentStatus for the given document
         document_status = DocumentStatus.objects.filter(document__pk=pk).order_by('-timestamp').first()
@@ -451,7 +451,7 @@ class DocumentActivityView(View):
         activities = DocumentActivity.objects.all().order_by('-timestamp')  # Assuming timestamp is a field in DocumentActivity
         return render(request, 'document_activity.html', {'activities': activities})
     
-class DocumentDetailView(DetailView):
+class DocumentDetailView(LoginRequiredMixin, DetailView):
     model = Document
     template_name = 'tracking/document_detail.html'
     context_object_name = 'document'
@@ -504,7 +504,7 @@ class DocumentHistoryView(ListView):
         document_id = self.kwargs['pk']
         return DocumentActivity.objects.filter(document_id=document_id)
 
-class DocumentUpdateStatusView(View):
+class DocumentUpdateStatusView(LoginRequiredMixin, View):
     def get(self, request, pk):
         try:
             document = get_object_or_404(Document, pk=pk)
@@ -576,7 +576,7 @@ class DocumentUpdateStatusView(View):
                 'form': form,
             })
     
-class CheckDocumentStatusUpdates(View):
+class CheckDocumentStatusUpdates(LoginRequiredMixin, View):
     def get(self, request):
         # Retrieve the department of the logged-in user
         user_department = request.user.profile.department  # Assuming a Profile model with department field linked to the user

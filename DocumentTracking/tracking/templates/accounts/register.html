@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg p-4 rounded">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Username Field -->
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" id="{{ form.username.id_for_label }}" value="{{ form.username.value }}">
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="mb-3">
+                        <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                        <input type="password" name="password1" class="form-control" id="{{ form.password1.id_for_label }}" value="{{ form.password1.value }}">
+                        {% if form.password1.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password1.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Confirm Password Field -->
+                    <div class="mb-3">
+                        <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                        <input type="password" name="password2" class="form-control" id="{{ form.password2.id_for_label }}" value="{{ form.password2.value }}">
+                        {% if form.password2.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password2.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Department Field -->
+                    <div class="mb-3">
+                        <label for="{{ form.department.id_for_label }}" class="form-label">Department</label>
+                        <select name="department" class="form-control" id="{{ form.department.id_for_label }}">
+                            {% for department in form.department.field.queryset %}
+                                <option value="{{ department.id }}" {% if department.id == form.department.value %}selected{% endif %}>
+                                    {{ department.name }}  <!-- or use whatever field you want to display -->
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.department.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.department.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>                   
+
+                    <!-- Register Button -->
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary w-100">Register</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

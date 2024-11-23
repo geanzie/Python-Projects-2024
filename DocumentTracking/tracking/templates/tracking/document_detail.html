@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load currency_filters %}
+{% block content %}
+<div class="container">
+    <h2>Document Detail</h2>
+    <div class="card">
+        <div class="card-body">
+            <!-- Table using Bootstrap 4 styles -->
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Field</th>
+                        <th scope="col">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Payee:</strong></td>
+                        <td>{{ document.payee }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Obligation Request #:</strong></td>
+                        <td>{{ document.obligation_number }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Description:</strong></td>
+                        <td>{{ document.description }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Amount:</strong></td>
+                        <td>{{ document.amount|to_php }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cellphone Number:</strong></td>
+                        {% if document.cellphone_number is None %}
+                        <td>No cellphone number available.</td>
+                        {% else %}
+                        <td>{{ document.cellphone_number }}</td>
+                        {% endif %}
+                    </tr>
+                    <tr>
+                        <td><strong>File:</strong></td>
+                        <td>
+                            {% if document.file_upload %}
+                                <a href="{{ document.file_upload.url }}" target="_blank">Download File</a>
+                            {% else %}
+                                No file uploaded.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Initial Department:</strong></td>
+                        <td>{{ document.initial_department }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td>{{ document.document_status }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Created At:</strong></td>
+                        <td>{{ document.created_at }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <a href="{% url 'document_list' %}" class="btn btn-primary">Back to Document List</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

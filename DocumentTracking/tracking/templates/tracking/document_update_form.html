@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Document Status{% endblock %}
+
+{% block content %}
+<h2 class="mt-4">Update Document Status</h2>
+<form method="post">
+    {% csrf_token %}
+    <table class="table">
+        <tr>
+            <th>Title</th>
+            <td>{{ document.title }}</td>
+        </tr>
+        <tr>
+            <th>Description</th>
+            <td>{{ document.description }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>
+                <select name="document_status" class="form-control">
+                    <option value="Pending" {% if document.document_status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="In Process" {% if document.document_status == 'In Process' %}selected{% endif %}>In Process</option>
+                    <option value="Returned" {% if document.document_status == 'Returned' %}selected{% endif %}>Returned</option>
+                    <option value="Forwarded" {% if document.document_status == 'Forwarded' %}selected{% endif %}>Forwarded</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </td>
+        </tr>
+    </table>
+</form>
+{% endblock %}

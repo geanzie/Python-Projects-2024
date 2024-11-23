@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <div class="container">
+    <h2>Update Document Status</h2>
+    <form action="{% url 'document_update_status' document.pk %}" method="post">
+        {% csrf_token %}
+        
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <th>Payee</th>
+                    <td>{{ document.payee }}</td>
+                </tr>
+                <tr>
+                    <th>Description</th>
+                    <td>{{ document.description }}</td>
+                </tr>
+                <tr>
+                    <th>Amount</th>
+                    <td>
+                        {{ document.amount }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>File Upload</th>
+                    <td><a href="{{ document.file_upload.url }}" target="_blank">{{ document.file_upload.name }}</a></td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td>
+                        {{ form.status }}  <!-- Render the status field from the form -->
+                    </td>
+                </tr>
+                <tr id="department-row" style="display: {% if form.instance.status == 'Forwarded' %}table-row{% else %}none{% endif %};">
+                    <th>Forward To Department</th>
+                    <td>
+                        {{ form.department }}  <!-- Render the forwarded department field from the form -->
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+      <button type="submit" class="btn btn-primary">Update Status</button>
+      <a href="{% url 'document_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+
+<script>
+    function toggleDepartmentDropdown() {
+        var statusSelect = document.getElementById("id_status");
+        var departmentRow = document.getElementById("department-row");
+
+        // Show the department dropdown if "Forwarded" is selected
+        if (statusSelect.value === "Forwarded") {
+            departmentRow.style.display = "table-row";
+        } else {
+            departmentRow.style.display = "none";
+        }
+    }
+
+    // Initialize visibility based on current status
+    toggleDepartmentDropdown();
+</script>
+{% endblock %}

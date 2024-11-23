@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+    <h2>User Profile</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Username: {{ user.username }}</h5>
+            <p class="card-text"><strong>Email:</strong> {{ user.email }}</p>
+            <p class="card-text"><strong>Department:</strong> {{ user.profile.department }}</p>
+            <p class="card-text"><strong>Is Active:</strong> {{ user.is_active }}</p>
+        </div>
+    </div>
+    <a href="{% url 'dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+</div>
+{% endblock %}

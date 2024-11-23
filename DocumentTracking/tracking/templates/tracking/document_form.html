@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% block title %}Create Document{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg p-4 rounded">
+                <h4>New Document</h4>
+                <form method="post" enctype="multipart/form-data" action="{% url 'document_create' %}">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <button type="submit" class="btn btn-primary">Create Document</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

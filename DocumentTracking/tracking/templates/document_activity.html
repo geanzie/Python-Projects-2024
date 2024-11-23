@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Document Activity{% endblock %}
+
+{% block content %}
+<h2 class="mt-4">Document Activity</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Obligation Number</th>
+            <th>Payee</th>
+            <th>Action</th>
+            <th>Performed By</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for activity in activities %}
+        <tr>
+            <td>{{ activity.document.obligation_number }}</td>
+            <td>{{ activity.document.payee }}</td>
+            <td>{{ activity.action }}</td>
+            <td>{{ activity.performed_by.username }}</td>
+            <td>{{ activity.timestamp }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

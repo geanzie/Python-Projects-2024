@@ -1,0 +1,56 @@
+{% load static %}
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+    <!-- Sidebar - Brand -->
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'dashboard' %}">
+        <div class="sidebar-brand-icon">
+            <i class="fas fa-smile"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">SB Admin 2</div>
+    </a>
+    
+    <!-- Divider -->
+    <hr class="sidebar-divider my-0">
+
+    <!-- Nav Item - Dashboard -->
+    <!-- Dashboard Link -->
+    <li class="nav-item active">
+        <a class="nav-link" href="{% url 'dashboard' %}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+    <!-- Search Document Link -->
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'document_search' %}">
+            <i class="fas fa-fw fa-search"></i>
+            <span>Search Document</span>
+        </a>
+    </li>
+    <!-- Document List Link -->
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'document_list' %}">
+            <i class="fas fa-fw fa-folder"></i>
+            <span>Document List</span>
+        </a>
+    </li>
+
+    <!-- Document Form Link -->
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'document_create' %}">
+            <i class="fas fa-fw fa-plus-circle"></i>
+            <span>Document Form</span>
+        </a>
+    </li>
+
+    <!-- Document Activity Link -->
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'document_activity' %}">
+            <i class="fas fa-fw fa-history"></i>
+            <span>Document Activity</span>
+        </a>
+    </li>
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Other items here -->
+</ul>

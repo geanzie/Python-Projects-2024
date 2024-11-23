@@ -1,0 +1,24 @@
+<form method="POST">
+    {% csrf_token %}
+    <label for="status">Update Status:</label>
+    <select name="status" id="status" onchange="toggleForwardDropdown(this.value)">
+        <option value="In Process">In Process</option>
+        <option value="Returned">Returned</option>
+        <option value="Forwarded">Forwarded</option>
+    </select>
+    <div id="forwardDropdown" style="display:none;">
+        <label for="forwarded_to">Forward to:</label>
+        <select name="forwarded_to" id="forwarded_to">
+            {% for department in departments %}
+                <option value="{{ department.id }}">{{ department.department_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Update Status</button>
+</form>
+
+<script>
+function toggleForwardDropdown(status) {
+    document.getElementById('forwardDropdown').style.display = (status === 'Forwarded') ? 'block' : 'none';
+}
+</script>

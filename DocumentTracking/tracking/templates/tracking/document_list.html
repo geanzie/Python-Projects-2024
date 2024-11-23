@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_filters %}
+{% block content %}
+<div class="container-fluid">
+    <h2>Document List</h2>
+    <!-- Document List Table -->
+    <table class="table table-striped" id="document-list">
+        <thead>
+            <tr>
+                <th>Obligation Number</th>
+                <th>Payee</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Forwarded To</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for document in page_obj.object_list %}
+            <tr id="document-{{ document.id }}">
+                <td>
+                    <a href="{% url 'document_detail' document.pk %}">{{ document.obligation_number }}</a> 
+                </td>
+                <td>{{ document.payee }}</td>
+                <td>{{ document.description }}</td>
+                <td>{{ document.amount|to_php }}</td>
+                <td>
+                    {% if document.forwarded_to %}
+                        {{ document.forwarded_to.name }}
+                    {% else %}
+                        <span>Not yet forwarded.</span>
+                    {% endif %}
+                </td>
+                <td class="status-cell">{{ document.document_status }}</td>
+                <td>
+                    {% if document.initial_department == user.profile.department %}
+                        <a href="{% url 'document_edit' document.pk %}" class="btn btn-info">Edit</a>
+                        {% if document.forwarded_to == user.profile.department or document.forwarded_to is None %}
+                            <a href="{% url 'document_update_status' document.pk %}" class="btn btn-primary">Update Status</a>
+                        {% else %}
+                            <button class="btn btn-secondary" disabled>Update Status (Forwarded)</button>
+                        {% endif %}
+                    {% elif document.forwarded_to == user.profile.department %}
+                        {% if document.can_receive %}
+                            <form action="{% url 'document_received' document.pk %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">Receive</button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'document_update_status' document.pk %}" class="btn btn-primary">Update Status</a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No documents available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page=1&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}" class="btn btn-light">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}" class="btn btn-light">Previous</a>
+        {% endif %}
+
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}" class="btn btn-light">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}" class="btn btn-light">Last</a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function updateDocumentList(data) {
+    data.forEach(doc => {
+        const row = document.getElementById(`document-${doc.document_id}`);
+        if (row) {
+            const statusCell = row.querySelector('.status-cell');
+            if (statusCell) {
+                statusCell.textContent = doc.status;
+            }
+
+            // Update the action buttons based on new status
+            const actionCell = row.querySelector('td:nth-child(5)');
+            if (doc.status === 'Forwarded') {
+                actionCell.querySelector('form button').disabled = false;  // Enable the "Receive" button when it's forwarded
+            }
+        }
+    });
+}
+
+function fetchDocumentStatusUpdates() {
+    fetch('/tracking/check_document_status_updates/')
+        .then(response => response.json())
+        .then(data => {
+            updateDocumentList(data);
+        })
+        .catch(error => console.error("Error fetching updates:", error));
+}
+
+// Fetch updates every minute
+setInterval(fetchDocumentStatusUpdates, 60000);
+</script>
+{% endblock %}

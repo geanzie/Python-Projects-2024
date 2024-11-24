@@ -24,6 +24,7 @@ from django.db import transaction
 from django.contrib.auth.models import User
 from .models import DocumentActivity
 from django.core.paginator import Paginator
+from datetime import datetime
 
 
 # User Registration View
@@ -56,14 +57,24 @@ class UserRegistrationView(View):
         return render(request, 'accounts/register.html', {'form': form})
 
 
-    
-
 class UserLoginView(LoginView):
     template_name = 'accounts/login.html'
     success_url = reverse_lazy('dashboard')  # Redirect to dashboard after successful login
 
+    # You can override form_valid() to capture user-specific session handling if needed
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Set session timeout here if needed or additional logic
+        return response
+
+
 class UserLogoutView(LogoutView):
     next_page = reverse_lazy('login')  # Redirect to login page after logout
+
+    # You can override get() here to log the user out based on some custom logic if needed
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return super().get(request, *args, **kwargs)
 
 
 class DocumentCreateView(LoginRequiredMixin, CreateView):
@@ -334,6 +345,24 @@ class DocumentListView(LoginRequiredMixin, ListView):
         return redirect('document_list')
     
 class DashboardView(LoginRequiredMixin, View):
+
+    def dispatch(self, request, *args, **kwargs):
+        # Step 1: Check session for last activity timestamp
+        last_activity = request.session.get('last_activity')
+        if last_activity:
+            # Convert the last activity string back to a datetime object
+            last_activity_time = datetime.fromisoformat(last_activity)
+            time_elapsed = timezone.now() - last_activity_time
+            # Step 2: Timeout after 30 minutes of inactivity
+            if time_elapsed > timedelta(minutes=30):
+                logout(request)  # Log out the user
+                return redirect('login')  # Redirect to login page
+        # Step 3: Update the last activity timestamp in the session
+        request.session['last_activity'] = timezone.now().isoformat()  # Store as string in ISO format
+        
+        # Continue with the regular request handling (calling the parent dispatch method)
+        return super().dispatch(request, *args, **kwargs)
+    
     def get(self, request, *args, **kwargs):
 
         # Step 1: Retrieve or set session data
@@ -346,23 +375,23 @@ class DashboardView(LoginRequiredMixin, View):
         # Update the session with the current visit time
         request.session['last_dashboard_visit'] = str(timezone.now())
         
-        # Step 1: Get the logged-in user's department
+        # Step 5: Get the logged-in user's department
         user_department = request.user.profile.department  # Assuming the user has a profile with a department field
 
-        # Step 2: Subquery to get the latest status timestamp for each department
+        # Step 6: Subquery to get the latest status timestamp for each department
         latest_department_statuses = DocumentStatus.objects.filter(
             department=user_department
         ).values('department').annotate(
             latest_status_timestamp=Max('timestamp')  # Get the latest timestamp per department
         )
 
-        # Step 3: Filter DocumentStatus entries to get the latest status per department
+        # Step 7: Filter DocumentStatus entries to get the latest status per department
         recent_statuses = DocumentStatus.objects.filter(
             department=user_department,  # Filter by the logged-in user's department
             timestamp__in=Subquery(latest_department_statuses.values('latest_status_timestamp'))
         )
 
-        # Step 4: Initialize the status counts dictionary
+        # Step 8: Initialize the status counts dictionary
         status_counts_dict = {
             'Pending': 0,
             'In_Process': 0,
@@ -371,31 +400,30 @@ class DashboardView(LoginRequiredMixin, View):
             'Released': 0,
         }
 
-        # Step 5: Count each status per department from the latest status entries
+        # Step 9: Count each status per department from the latest status entries
         for status in recent_statuses:
             status_name = status.status.replace(" ", "_")  # Replace spaces with underscores for consistency
             if status_name in status_counts_dict:
                 status_counts_dict[status_name] += 1
 
-        # Step 6: Retrieve recent activities for display (last 10 activities)
+        # Step 10: Retrieve recent activities for display (last 10 activities)
         recent_activities = DocumentActivity.objects.filter(
             document__in=Subquery(latest_department_statuses.values('document'))
         ).select_related('document', 'performed_by').order_by('-timestamp')[:10]  # Get the last 10 activities
 
-        # Paginate recent activities
+        # Step 11: Paginate recent activities
         paginator = Paginator(recent_activities, 10)  # Show 10 activities per page
         page_number = request.GET.get('page')  # Get the current page number from the query string
         page_obj = paginator.get_page(page_number)  # Get the corresponding page of activities
 
-
-        # Step 7: Prepare the context to pass to the template
+        # Step 12: Prepare the context to pass to the template
         context = {
             'status_counts': status_counts_dict,  # Pass the status counts per department
-            'recent_activities': recent_activities,  # Pass the recent activities
+            'recent_activities': page_obj,  # Pass the paginated recent activities
             'last_dashboard_visit': request.session.get('last_dashboard_visit', 'N/A'),  # Pass session data
         }
 
-        # Step 8: Render the dashboard template with the context data
+        # Step 13: Render the dashboard template with the context data
         return render(request, 'dashboard.html', context)
 
 class UserRegisterView(View):
@@ -485,18 +513,54 @@ class DocumentReceivedView(LoginRequiredMixin, View):
 
 class DocumentActivityView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        # Fetch all activities
+         # Fetch all activities
+        query = request.GET.get('search', '')  # Get the search term from the query string
         all_activities = DocumentActivity.objects.select_related('document', 'performed_by').order_by('-timestamp')
 
-        # Paginate activities
+        if query:  # If there's a search query, filter activities
+            all_activities = all_activities.filter(
+                Q(document__obligation_number__icontains=query) |
+                Q(document__payee__icontains=query)
+            )
+
         paginator = Paginator(all_activities, 10)  # Show 10 activities per page
         page_number = request.GET.get('page')  # Get the current page number from the query string
         page_obj = paginator.get_page(page_number)  # Get the corresponding page of activities
 
         context = {
             'activities': page_obj,  # Pass the paginated activities
+            'query': query,
         }
         return render(request, 'document_activity.html', context)
+
+    def get_document_activity_history(self, obligation_number):
+        # Fetch the document by obligation_number
+        document = get_object_or_404(Document, obligation_number=obligation_number)
+
+        # Get all activities for this document, ordered by timestamp
+        document_activity_history = DocumentActivity.objects.filter(document=document).order_by('-timestamp').values(
+            'document__obligation_number', 'document__payee', 'action', 'performed_by__username', 'document__forwarded_to', 'timestamp')
+
+        return document_activity_history
+
+def document_activity_detail(request, obligation_number):
+    # Fetch the document by obligation_number (as a string)
+    document = get_object_or_404(Document, obligation_number=obligation_number)
+    
+    # Fetch all activities for this document
+    activities = DocumentActivity.objects.filter(document=document).order_by('-timestamp')
+    
+    # Add pagination
+    paginator = Paginator(activities, 10)  # 10 activities per page
+    page_number = request.GET.get('page')  # Get the current page number from query parameters
+    page_obj = paginator.get_page(page_number)  # Get the activities for the current page
+    
+    context = {
+        'obligation_number': obligation_number,
+        'activities': activities,
+    }
+    
+    return render(request, 'document_activity_detail.html', context)
     
 class DocumentDetailView(LoginRequiredMixin, DetailView):
     model = Document

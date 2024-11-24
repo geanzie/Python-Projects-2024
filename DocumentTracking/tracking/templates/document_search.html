@@ -2,11 +2,10 @@
 {% load crispy_forms_tags %}
 {% load currency_filters %}
 {% block content %}
-<div class="container-fluid">
     <h2>Search Documents</h2>
-    <form method="GET" action="{% url 'document_search' %}">
+    <form method="GET" action="{% url 'document_search' %}" class="form-inline mb-3">
         <div class="form-group">
-            <input type="text" name="q" class="form-control" placeholder="Search by payee">
+            <input type="text" name="q" class="form-control mr-2" placeholder="Search by payee">
         </div>
         <button type="submit" class="btn btn-primary">Search</button>
     </form>
@@ -37,5 +36,4 @@
     {% else %}
     <p>No documents found.</p>
     {% endif %}
-</div>
 {% endblock %}

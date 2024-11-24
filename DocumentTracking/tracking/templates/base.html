@@ -7,7 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Document Tracking{% endblock %}</title>
-
+    <!-- Add jQuery CDN link first -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- SB Admin 2 CSS -->
     <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -41,19 +42,26 @@
     <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
 
+
     <script>
         window.onbeforeunload = function() {
             // Send an AJAX request to logout the user when the page is about to be unloaded
             fetch('/logout/', {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',  // Ensure the CSRF token is included
                 },
-                body: JSON.stringify({}),
+                body: JSON.stringify({})  // Send an empty body (since logout doesn't need any data)
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Logged out successfully');
+                }
+            }).catch(error => {
+                console.error('Error logging out:', error);
             });
         };
-    </script>
-    
+    </script>    
 </body>
 
 </html>

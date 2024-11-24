@@ -23,6 +23,7 @@ from django.db import IntegrityError
 from django.db import transaction
 from django.contrib.auth.models import User
 from .models import DocumentActivity
+from django.core.paginator import Paginator
 
 
 # User Registration View
@@ -160,7 +161,7 @@ class DocumentEditView(LoginRequiredMixin, UpdateView):
             document=self.object,
             action="Edited",
             performed_by=self.request.user,
-            timestamp=self.object.updated_at
+            timestamp=self.object.created_at
         )
         return super().form_valid(form)
     
@@ -334,6 +335,17 @@ class DocumentListView(LoginRequiredMixin, ListView):
     
 class DashboardView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
+
+        # Step 1: Retrieve or set session data
+        if 'last_dashboard_visit' not in request.session:
+            request.session['last_dashboard_visit'] = 'First visit'
+        else:
+            last_visit = request.session['last_dashboard_visit']
+            print(f"Last dashboard visit: {last_visit}")
+        
+        # Update the session with the current visit time
+        request.session['last_dashboard_visit'] = str(timezone.now())
+        
         # Step 1: Get the logged-in user's department
         user_department = request.user.profile.department  # Assuming the user has a profile with a department field
 
@@ -356,7 +368,7 @@ class DashboardView(LoginRequiredMixin, View):
             'In_Process': 0,
             'Returned': 0,
             'Received': 0,
-            'Forwarded': 0,
+            'Released': 0,
         }
 
         # Step 5: Count each status per department from the latest status entries
@@ -370,10 +382,17 @@ class DashboardView(LoginRequiredMixin, View):
             document__in=Subquery(latest_department_statuses.values('document'))
         ).select_related('document', 'performed_by').order_by('-timestamp')[:10]  # Get the last 10 activities
 
+        # Paginate recent activities
+        paginator = Paginator(recent_activities, 10)  # Show 10 activities per page
+        page_number = request.GET.get('page')  # Get the current page number from the query string
+        page_obj = paginator.get_page(page_number)  # Get the corresponding page of activities
+
+
         # Step 7: Prepare the context to pass to the template
         context = {
             'status_counts': status_counts_dict,  # Pass the status counts per department
             'recent_activities': recent_activities,  # Pass the recent activities
+            'last_dashboard_visit': request.session.get('last_dashboard_visit', 'N/A'),  # Pass session data
         }
 
         # Step 8: Render the dashboard template with the context data
@@ -399,10 +418,24 @@ class UserLoginView(View):
     def post(self, request):
         username = request.POST['username']
         password = request.POST['password']
+        
+        # Authenticate user
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            
+            # Store additional data in session
+            request.session['user_id'] = user.id
+            request.session['username'] = user.username
+            if hasattr(user, 'profile') and user.profile.department:  # Check if Profile and department exist
+                request.session['department'] = user.profile.department.name
+            else:
+                request.session['department'] = 'Unknown'
+
+            # Redirect to dashboard
             return redirect('dashboard')
+        
+        # Handle invalid credentials
         messages.error(request, 'Invalid username or password.')
         return render(request, 'accounts/login.html')
 
@@ -428,13 +461,17 @@ class DocumentReceivedView(LoginRequiredMixin, View):
                         department=document_status.department
                     )
 
-                # Create a DocumentActivity entry only if it's not already created
-                if not DocumentActivity.objects.filter(document=document_status.document, action='Received').exists():
+                # Get the latest status of the document
+                latest_activity = DocumentActivity.objects.filter(document=document_status.document).order_by('-timestamp').first()
+
+                # Create a DocumentActivity entry only if the latest activity doesn't match the current action
+                if not latest_activity or latest_activity.action != 'Received':
                     DocumentActivity.objects.create(
                         document=document_status.document,  # Reference to the document
                         action='Received',  # Action taken by the user
                         performed_by=request.user  # Reference to the user who performed the action
                     )
+
 
                 messages.success(request, 'Document marked as received and status updated to In Process.')
             else:
@@ -446,10 +483,20 @@ class DocumentReceivedView(LoginRequiredMixin, View):
 
 
 
-class DocumentActivityView(View):
-    def get(self, request):
-        activities = DocumentActivity.objects.all().order_by('-timestamp')  # Assuming timestamp is a field in DocumentActivity
-        return render(request, 'document_activity.html', {'activities': activities})
+class DocumentActivityView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        # Fetch all activities
+        all_activities = DocumentActivity.objects.select_related('document', 'performed_by').order_by('-timestamp')
+
+        # Paginate activities
+        paginator = Paginator(all_activities, 10)  # Show 10 activities per page
+        page_number = request.GET.get('page')  # Get the current page number from the query string
+        page_obj = paginator.get_page(page_number)  # Get the corresponding page of activities
+
+        context = {
+            'activities': page_obj,  # Pass the paginated activities
+        }
+        return render(request, 'document_activity.html', context)
     
 class DocumentDetailView(LoginRequiredMixin, DetailView):
     model = Document
@@ -519,9 +566,13 @@ class DocumentUpdateStatusView(LoginRequiredMixin, View):
                 'department': document.forwarded_to if current_status and current_status.status == 'Forwarded' else None
             })
 
+            # Determine if the "Receive" button should be shown based on status
+            show_receive_button = current_status and current_status.status == "Returned" and document.initial_department == request.user.profile.department
+
             return render(request, 'tracking/document_update_status.html', {
                 'document': document,
                 'form': form,
+                'show_receive_button': show_receive_button,  # Pass this flag to the template
             })
         
         except Exception as e:
@@ -534,6 +585,17 @@ class DocumentUpdateStatusView(LoginRequiredMixin, View):
             document = get_object_or_404(Document, pk=pk)
             print(f"Document fetched for status update: {document.payee} (ID: {document.pk})")
 
+            # Fetch current status of the document
+            current_status = document.statuses.last()  # Get the latest status
+            print(f"Current document status: {current_status.status if current_status else 'None'}")
+
+            # Check if the document status is "Released" or "Returned"
+            if current_status and current_status.status in ['Released', 'Returned']:
+                # Allow updates only if the user is from the initial department
+                if document.initial_department != request.user.profile.department:
+                    messages.error(request, "You cannot update this document because it is either released or returned.")
+                    return redirect('document_list')
+                
             form = DocumentStatusUpdateForm(request.POST)
 
             if form.is_valid():
@@ -542,6 +604,13 @@ class DocumentUpdateStatusView(LoginRequiredMixin, View):
 
                 print(f"Form is valid. Status: {status}, Department: {department}")
 
+                 # Handle Returned status
+                if status == 'Returned':
+                    # Return the document to the initial department and set the status to Returned
+                    document.forwarded_to = document.initial_department
+                    document.save()
+                    print(f"Document returned to initial department: {document.initial_department}")
+                    
                 # Create a new DocumentStatus entry
                 document_status = DocumentStatus(
                     document=document,
@@ -550,6 +619,20 @@ class DocumentUpdateStatusView(LoginRequiredMixin, View):
                 )
                 document_status.save()
                 print(f"New DocumentStatus entry created with ID: {document_status.pk}")
+
+                # Create a DocumentActivity entry to log this change
+                activity = DocumentActivity(
+                    document=document,
+                    action=f"{status}",
+                    performed_by=self.request.user,  # Log the user who made the change
+                )
+                activity.save()
+                print(f"DocumentActivity entry created with ID: {activity.pk}")
+
+                # Update the current_status field in Document model
+                document.current_status = status  # Update the current status in the Document model
+                document.save()
+                print(f"Document current status updated to: {document.current_status}")
 
                 # Update document status in Document model if necessary
                 if status == 'Forwarded':

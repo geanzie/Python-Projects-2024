@@ -38,7 +38,12 @@
                     {% if document.initial_department == user.profile.department %}
                         <a href="{% url 'document_edit' document.pk %}" class="btn btn-info">Edit</a>
                         {% if document.forwarded_to == user.profile.department or document.forwarded_to is None %}
+                            {% if show_receive_button %}
+                                <!-- Show "Receive" button and "Edit" button if the status is "Returned" -->
+                                <button class="btn btn-primary" id="receiveButton">Receive</button>
+                            {% else %}
                             <a href="{% url 'document_update_status' document.pk %}" class="btn btn-primary">Update Status</a>
+                            {% endif %}
                         {% else %}
                             <button class="btn btn-secondary" disabled>Update Status (Forwarded)</button>
                         {% endif %}

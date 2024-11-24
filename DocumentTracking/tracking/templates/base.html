@@ -41,7 +41,19 @@
     <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
 
-    <!-- Add jQuery and toggle sidebar functionality -->
+    <script>
+        window.onbeforeunload = function() {
+            // Send an AJAX request to logout the user when the page is about to be unloaded
+            fetch('/logout/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({}),
+            });
+        };
+    </script>
+    
 </body>
 
 </html>

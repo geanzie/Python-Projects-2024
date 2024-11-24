@@ -45,7 +45,7 @@ class DocumentStatus(models.Model):
         ('In Process', 'In Process'),
         ('Returned', 'Returned'),
         ('Forwarded', 'Forwarded'),
-        ('Received', 'Received'),
+        ('Released', 'Released'),   
     ]
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='statuses')
     department = models.ForeignKey(Department, on_delete=models.CASCADE)

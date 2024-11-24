@@ -46,7 +46,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # 'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -141,3 +141,7 @@ LOGOUT_REDIRECT_URL = 'login'  # Redirect to the login page after logout
 # Media files configuration
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Session settings
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Ensure using database session storage
+SESSION_COOKIE_AGE = 1800  # Session timeout in seconds (e.g., 30 minutes)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Automatically expire session when the browser is closed

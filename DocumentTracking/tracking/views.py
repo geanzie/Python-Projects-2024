@@ -472,7 +472,7 @@ class DocumentSearchView(ListView):
 
         # Apply search filter if there's a query
         if query:
-            queryset = queryset.filter(Q(title__icontains=query) | Q(description__icontains=query))
+            queryset = queryset.filter(Q(payee__icontains=query) | Q(description__icontains=query))
 
         # Apply status filter if a specific status is selected
         if status_filter:

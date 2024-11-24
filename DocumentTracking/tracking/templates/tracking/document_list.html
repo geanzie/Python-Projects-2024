@@ -3,18 +3,18 @@
 {% load currency_filters %}
 {% block content %}
 <div class="container-fluid">
-    <h2>Document List</h2>
+    <h2 class="mt-4">Document List</h2>
     <!-- Document List Table -->
-    <table class="table table-striped" id="document-list">
-        <thead>
+    <table class="table table-bordered table-striped mt-3" id="document-list">
+        <thead class="thead-dark">
             <tr>
-                <th>Obligation Number</th>
-                <th>Payee</th>
-                <th>Description</th>
-                <th>Amount</th>
-                <th>Forwarded To</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th scope="col">Obligation Number</th>
+                <th scope="col">Payee</th>
+                <th scope="col">Description</th>
+                <th scope="col">Amount</th>
+                <th scope="col">Forwarded To</th>
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
             </tr>
         </thead>
         <tbody>

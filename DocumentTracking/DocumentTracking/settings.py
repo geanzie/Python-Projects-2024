@@ -82,10 +82,10 @@ WSGI_APPLICATION = 'DocumentTracking.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'geanzie$track_dtb',      # Replace with your database name
-        'USER': 'geanzie',            # Replace with your MySQL username
+        'NAME': 'trak_dtb',      # Replace with your database name
+        'USER': 'root',            # Replace with your MySQL username
         'PASSWORD': 'T!meMachine617',        # Replace with your MySQL password
-        'HOST': 'geanzie.mysql.pythonanywhere-services.com',                # Or your database host, 'localhost' if on the same server
+        'HOST': 'localhost',                # Or your database host, 'localhost' if on the same server
         'PORT': '3306',                     # MySQL’s default port is 3306
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",  # Enforces data integrity

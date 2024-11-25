@@ -2,6 +2,7 @@
 {% block content %}
 <div class="container mt-4">
     <h3 class="mb-4">Documents with Status: {{ status }}</h3>
+    <div class="table-responsive">
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -32,5 +33,6 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endblock %}

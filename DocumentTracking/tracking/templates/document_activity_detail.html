@@ -4,6 +4,7 @@
 
 {% block content %}
 <h1>Activity History for Obligation Number: {{ obligation_number }}</h1>
+<div class="table-responsive">
 <table class="table table-bordered table-striped mt-3">
     <thead class="thead-dark">
         <tr>
@@ -30,6 +31,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 <!-- Pagination Controls -->
 <div class="pagination mt-4">
     <nav aria-label="Page navigation">

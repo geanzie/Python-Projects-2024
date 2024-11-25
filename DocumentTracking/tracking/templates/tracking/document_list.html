@@ -5,6 +5,7 @@
 <div class="container-fluid">
     <h2 class="mt-4">Document List</h2>
     <!-- Document List Table -->
+    <div class="table-responsive">
     <table class="table table-bordered table-striped mt-3" id="document-list">
         <thead class="thead-dark">
             <tr>
@@ -81,6 +82,7 @@
         <a href="?page={{ page_obj.paginator.num_pages }}&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}" class="btn btn-light">Last</a>
         {% endif %}
     </div>
+</div>
 </div>
 
 <script>

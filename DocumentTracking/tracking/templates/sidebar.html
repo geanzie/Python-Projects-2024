@@ -1,92 +1,59 @@
 {% load static %}
 <style>
-    .brand-description {
-    font-family: Arial, Helvetica, sans-serif; /* Inherit font from parent */
-    font-size: 0.65rem; /* Makes the text smaller */
-    text-transform: capitalize; /* Ensures all text is in lowercase */
-    margin-bottom: 4px;
+.brand-description {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 0.65rem;
+        text-transform: capitalize;
+        margin-bottom: 4px;
 }
 </style>
 
 <div id="wrapper">
-    <!-- Sidebar -->
-    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-        <!-- Sidebar - Brand -->
-        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'dashboard' %}">
-            <div class="sidebar-brand-icon">
-                <i class="fas fa-file-alt"></i> <!-- Represents a document -->
-            </div>
-            <div class="sidebar-brand-text mx-1">
-                DocTrack
-                <p class="small brand-description">document tracking system</p> 
-            </div> <!-- Replace 'SB Admin 2' with your app name -->
-        </a>
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'dashboard' %}">
+                <div class="sidebar-brand-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="sidebar-brand-text mx-1">
+                    DocTrack
+                    <p class="small brand-description">document tracking system</p>
+                </div>
+            </a>
 
+            <hr class="sidebar-divider my-0">
 
-        <!-- Divider -->
-        <hr class="sidebar-divider my-0">
+            <li class="nav-item active">
+                <a class="nav-link" href="{% url 'dashboard' %}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'document_search' %}">
+                    <i class="fas fa-fw fa-search"></i>
+                    <span>Search Document</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'document_list' %}">
+                    <i class="fas fa-fw fa-folder"></i>
+                    <span>Document List</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'document_create' %}">
+                    <i class="fas fa-fw fa-plus-circle"></i>
+                    <span>Document Form</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'document_activity' %}">
+                    <i class="fas fa-fw fa-history"></i>
+                    <span>Document Activity</span>
+                </a>
+            </li>
 
-        <!-- Nav Items -->
-        <li class="nav-item active">
-            <a class="nav-link" href="{% url 'dashboard' %}">
-                <i class="fas fa-fw fa-tachometer-alt"></i>
-                <span>Dashboard</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'document_search' %}">
-                <i class="fas fa-fw fa-search"></i>
-                <span>Search Document</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'document_list' %}">
-                <i class="fas fa-fw fa-folder"></i>
-                <span>Document List</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'document_create' %}">
-                <i class="fas fa-fw fa-plus-circle"></i>
-                <span>Document Form</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'document_activity' %}">
-                <i class="fas fa-fw fa-history"></i>
-                <span>Document Activity</span>
-            </a>
-        </li>
-
-        <!-- Divider -->
-        <hr class="sidebar-divider">
-    </ul>
-    <!-- Main Content -->
-    <div id="main-content">
-        <!-- Your page content goes here -->
-    </div>
+            <hr class="sidebar-divider">
+        </ul>
 </div>
-
-
-<!-- Sidebar Toggle Script -->
-<!-- <script>
-    document.addEventListener("DOMContentLoaded", function () {
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const toggleIcon = document.getElementById('sidebarToggleIcon');
-
-    // When the sidebar toggle button is clicked
-    sidebarToggle.addEventListener('click', function () {
-        sidebar.classList.toggle('collapsed'); // Toggle the sidebar collapse
-        if (sidebar.classList.contains('collapsed')) {
-            // Sidebar is collapsed, show chevron right
-            toggleIcon.classList.remove('fa-chevron-left');
-            toggleIcon.classList.add('fa-chevron-right');
-        } else {
-            // Sidebar is expanded, show chevron left
-            toggleIcon.classList.remove('fa-chevron-right');
-            toggleIcon.classList.add('fa-chevron-left');
-        }
-    });
-});
-</script> -->

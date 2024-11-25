@@ -10,7 +10,7 @@
     <input type="text" name="search" class="form-control mr-2" placeholder="Search by payee" value="{{ request.GET.search }}">
     <button type="submit" class="btn btn-primary">Search</button>
 </form>
-
+<div class="table-responsive">
 <table class="table table-bordered table-striped mt-3">
     <thead class="thead-dark">
         <tr>
@@ -43,7 +43,7 @@
         {% endfor %}
     </tbody>
 </table>
-
+</div>
 <!-- Pagination Controls -->
 <div class="pagination mt-4">
     <nav aria-label="Page navigation">

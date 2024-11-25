@@ -375,57 +375,77 @@ class DashboardView(LoginRequiredMixin, View):
         # Update the session with the current visit time
         request.session['last_dashboard_visit'] = str(timezone.now())
         
-        # Step 5: Get the logged-in user's department
-        user_department = request.user.profile.department  # Assuming the user has a profile with a department field
+       # Get the logged-in user's department
+        user_department = request.user.profile.department
 
-        # Step 6: Subquery to get the latest status timestamp for each department
-        latest_department_statuses = DocumentStatus.objects.filter(
-            department=user_department
-        ).values('department').annotate(
-            latest_status_timestamp=Max('timestamp')  # Get the latest timestamp per department
+        # Query all activities related to the user's department
+        recent_activities = DocumentActivity.objects.filter(
+            Q(document__initial_department=user_department) | 
+            Q(document__forwarded_to=user_department) and 
+            Q(performed_by=request.user.profile.user)
+        ).select_related('document', 'performed_by').order_by('-timestamp')
+
+        # Total number of actions performed by the logged-in user
+        total_actions = recent_activities.count()
+
+        # Group activities by action and count them
+        activity_summary = recent_activities.values('action').annotate(
+            action_count=Count('id')
         )
 
-        # Step 7: Filter DocumentStatus entries to get the latest status per department
-        recent_statuses = DocumentStatus.objects.filter(
-            department=user_department,  # Filter by the logged-in user's department
-            timestamp__in=Subquery(latest_department_statuses.values('latest_status_timestamp'))
-        )
-
-        # Step 8: Initialize the status counts dictionary
+        # Initialize the status counts dictionary
         status_counts_dict = {
-            'Pending': 0,
-            'In_Process': 0,
+            'Total': 0,
             'Returned': 0,
-            'Received': 0,
+            'Forwarded': 0,
             'Released': 0,
+            'Received': 0,
         }
 
-        # Step 9: Count each status per department from the latest status entries
-        for status in recent_statuses:
-            status_name = status.status.replace(" ", "_")  # Replace spaces with underscores for consistency
-            if status_name in status_counts_dict:
-                status_counts_dict[status_name] += 1
+        # Update status counts
+        for entry in activity_summary:
+            action = entry['action'].replace(" ", "_")
+            count = entry['action_count']
+            if action in status_counts_dict:
+                status_counts_dict[action] += count
 
-        # Step 10: Retrieve recent activities for display (last 10 activities)
-        recent_activities = DocumentActivity.objects.filter(
-            document__in=Subquery(latest_department_statuses.values('document'))
-        ).select_related('document', 'performed_by').order_by('-timestamp')[:10]  # Get the last 10 activities
-
-        # Step 11: Paginate recent activities
-        paginator = Paginator(recent_activities, 10)  # Show 10 activities per page
-        page_number = request.GET.get('page')  # Get the current page number from the query string
-        page_obj = paginator.get_page(page_number)  # Get the corresponding page of activities
+        # Paginate recent activities
+        paginator = Paginator(recent_activities, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
 
         # Step 12: Prepare the context to pass to the template
         context = {
             'status_counts': status_counts_dict,  # Pass the status counts per department
             'recent_activities': page_obj,  # Pass the paginated recent activities
             'last_dashboard_visit': request.session.get('last_dashboard_visit', 'N/A'),  # Pass session data
+            'total_documents': total_actions  # Add total documents to the contex
         }
 
         # Step 13: Render the dashboard template with the context data
         return render(request, 'dashboard.html', context)
+        
+class DashboardStatusListView(LoginRequiredMixin, View):
+    def get(self, request):
+        # Get the status from the query parameter
+        status = request.GET.get('status')
+        user_department = request.user.profile.department  # Assuming Profile model is linked to the User
 
+        # Filter documents based on the logged-in user's department and the status
+        documents = Document.objects.filter(
+            Q(initial_department=user_department) | Q(forwarded_to=user_department)
+        )
+
+        if status:
+            documents = documents.filter(current_status=status)
+
+        # Pass the filtered documents and the status to the template
+        context = {
+            'documents': documents,
+            'status': status,
+        }
+        return render(request, 'dashboard_status_list.html', context)
+    
 class UserRegisterView(View):
     def get(self, request):
         form = UserCreationForm()

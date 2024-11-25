@@ -5,71 +5,89 @@
 {% block content %}
 <!-- Earnings Cards (Status Counts) -->
 <div class="row">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Pending</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ status_counts.Pending }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                    </div>
+    <!-- Card 1: Total Documents -->
+<div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-4 custom-col">
+    <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Documents</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_documents }}</div> <!-- Display total documents -->
+                </div>
+                <div class="col-auto">
+                    <i class="fas fa-file fa-2x text-gray-300"></i> <!-- Icon for the total count card -->
                 </div>
             </div>
         </div>
     </div>
+</div>
+<!-- Card 2: Received -->
+<div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-4 custom-col">
+    <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Received</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800"><a href="{% url 'dashboard_status_list' %}?status=Received" class="text-decoration-none">{{ status_counts.Received }}</a></div>
+                </div>
+                <div class="col-auto">
+                    <i class="fas fa-envelope-open-text fa-2x text-gray-300"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Card 3: Returned -->
+<div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-4 custom-col">
+    <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Returned</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800"><a href="{% url 'dashboard_status_list' %}?status=Returned" class="text-decoration-none">{{ status_counts.Returned }}</a></div>
+                </div>
+                <div class="col-auto">
+                    <i class="fas fa-undo fa-2x text-gray-300"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">In Process</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ status_counts.In_Process }}</div>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-sync-alt fa-2x text-gray-300"></i>
-                    </div>
+<!-- Card 4: Forwarded -->
+<div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-4 custom-col">
+    <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Forwarded</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800"><a href="{% url 'dashboard_status_list' %}?status=Forwarded" class="text-decoration-none">{{ status_counts.Forwarded }}</a></div>
+                </div>
+                <div class="col-auto">
+                    <i class="fas fa-arrow-right fa-2x text-gray-300"></i>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Returned</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ status_counts.Returned }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-undo fa-2x text-gray-300"></i>
-                    </div>
+</div>
+{% if request.user.profile.department.name == "MUNICIPAL TREASURER'S OFFICE" %}
+<!-- Card 5: Released -->
+<div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-4 custom-col">
+    <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Released</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800"><a href="{% url 'dashboard_status_list' %}?status=Released" class="text-decoration-none">{{ status_counts.Released }}</a></div>
+                </div>
+                <div class="col-auto">
+                    <i class="fas fa-file-export fa-2x text-gray-300"></i>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Forwarded</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ status_counts.Forwarded }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-arrow-right fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+</div>
+{% endif %}
 </div>
 
 <!-- Recent Activities Table -->
@@ -141,44 +159,26 @@
     </nav>
 </div>
 <p>Last visit: {{ last_dashboard_visit }}</p>
-<script>
-    function updateDashboardStatus(data) {
-        const statusCounts = {
-            'Pending': 0,
-            'In_Process': 0,
-            'Returned': 0,
-            'Forwarded': 0
-        };
+<!-- css script -->
+<style>
+    .custom-col {
+    flex: 0 0 20%; /* Each card takes 20% of the row */
+    max-width: 20%; /* Prevent overflow */
+}
 
-        // Count the statuses in the received data
-        data.forEach(status => {
-            if (statusCounts[status.status] !== undefined) {
-                statusCounts[status.status] += 1;
-            }
-        });
-
-        // Update the status text on the page
-        document.getElementById("status-pending").innerText = `Pending: ${statusCounts['Pending']}`;
-        document.getElementById("status-in-process").innerText = `In_Process: ${statusCounts['In_Process']}`;
-        document.getElementById("status-returned").innerText = `Returned: ${statusCounts['Returned']}`;
-        document.getElementById("status-forwarded").innerText = `Forwarded: ${statusCounts['Forwarded']}`;
+@media (max-width: 768px) {
+    .custom-col {
+        flex: 0 0 50%; /* Adjust for smaller screens */
+        max-width: 50%;
     }
+}
 
-    function fetchDocumentStatusUpdates() {
-        fetch('/tracking/check_document_status_updates/')
-            .then(response => response.json())
-            .then(data => {
-                updateDashboardStatus(data);   // Update status counts
-                displayNotifications(data);    // Handle notifications
-                updateDocumentList(data);      // Update document list (if applicable)
-            })
-            .catch(error => console.error("Error fetching updates:", error));
+@media (max-width: 576px) {
+    .custom-col {
+        flex: 0 0 100%; /* Full width for very small screens */
+        max-width: 100%;
     }
+}
 
-    // Fetch updates every minute
-    setInterval(fetchDocumentStatusUpdates, 60000);
-
-    // Fetch initial updates on page load
-    fetchDocumentStatusUpdates();
-</script>
+</style>
 {% endblock %}

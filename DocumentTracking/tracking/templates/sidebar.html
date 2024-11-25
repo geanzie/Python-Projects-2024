@@ -1,14 +1,27 @@
 {% load static %}
+<style>
+    .brand-description {
+    font-family: Arial, Helvetica, sans-serif; /* Inherit font from parent */
+    font-size: 0.65rem; /* Makes the text smaller */
+    text-transform: capitalize; /* Ensures all text is in lowercase */
+    margin-bottom: 4px;
+}
+</style>
+
 <div id="wrapper">
     <!-- Sidebar -->
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
         <!-- Sidebar - Brand -->
         <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'dashboard' %}">
             <div class="sidebar-brand-icon">
-                <i class="fas fa-smile"></i>
+                <i class="fas fa-file-alt"></i> <!-- Represents a document -->
             </div>
-            <div class="sidebar-brand-text mx-3">SB Admin 2</div>
+            <div class="sidebar-brand-text mx-1">
+                DocTrack
+                <p class="small brand-description">document tracking system</p> 
+            </div> <!-- Replace 'SB Admin 2' with your app name -->
         </a>
+
 
         <!-- Divider -->
         <hr class="sidebar-divider my-0">

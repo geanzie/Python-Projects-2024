@@ -10,3 +10,10 @@ def to_php(value):
         return f"₱{value:,.2f}"  # Format with commas and 2 decimal places
     except (ValueError, TypeError):
         return value
+
+@register.filter
+def getattr(obj, attr_name, default=None):
+    try:
+        return getattr(obj, attr_name, default)
+    except AttributeError:
+        return default

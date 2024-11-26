@@ -60,13 +60,13 @@ class Document(models.Model):
 
     #New tables to accommodate the other system in treasury
     net_amount = models.DecimalField(max_digits=12, decimal_places=2,  default=Decimal('0.00'), verbose_name="Net Amount")
-    six_prcnt = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    five_prcnt = models.DecimalField(max_digits=12, decimal_places=2,  default=Decimal('0.00'))
-    three_prcnt = models.DecimalField(max_digits=12, decimal_places=2,  default=Decimal('0.00'))
-    two_prcnt = models.DecimalField(max_digits=12, decimal_places=2,  default=Decimal('0.00'))
-    one_five_prcnt = models.DecimalField(max_digits=12, decimal_places=2,  default=Decimal('0.00'))
-    one_prcnt_frst = models.DecimalField(max_digits=12, decimal_places=2,  default=Decimal('0.00'))
-    one_prcnt_scnd = models.DecimalField(max_digits=12, decimal_places=2,  default=Decimal('0.00'))
+    six_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True, default=Decimal('0.00'))
+    five_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
+    three_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
+    two_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
+    one_five_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
+    one_prcnt_frst = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
+    one_prcnt_scnd = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
     dv_number = models.CharField(
         max_length=14,
         validators=[RegexValidator(regex=r'^\d{3}-\d{2}-\d{2}-\d{4}$', message='Number must be in the format 000-00-00-0000')], verbose_name="Disbursement Voucher Number")  

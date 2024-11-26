@@ -40,18 +40,29 @@ class DocumentForm(forms.ModelForm):
         self.fields['obr_date'].widget = widgets.DateInput(attrs={'type': 'date'})
         self.helper = FormHelper()
         self.helper.add_input(Submit('submit', 'Create Document'))
+
 from datetime import date
 #For accounting
 class AccountingForm(forms.ModelForm):
     class Meta:
         model = Document
-        fields = ['net_amount', 'six_prcnt', 'five_prcnt', 'three_prcnt', 'two_prcnt', 'one_five_prcnt', 'one_prcnt_frst', 'one_prcnt_scnd', 'dv_number', 'dv_date']
-
-    # Optional: Custom validations for specific fields
-    def clean_dv_number(self):
-        dv_number = self.cleaned_data.get('dv_number')
-        # Add custom validation for the DV number if needed
-        return dv_number
+        fields = [
+            'dv_number', 'dv_date', 'net_amount', 
+            'six_prcnt', 'five_prcnt', 'three_prcnt', 
+            'two_prcnt', 'one_five_prcnt', 
+            'one_prcnt_frst', 'one_prcnt_scnd'
+        ]
+        # Make the percentage fields optional
+        six_prcnt = forms.CharField(required=False)
+        five_prcnt = forms.CharField(required=False)
+        three_prcnt = forms.CharField(required=False)
+        two_prcnt = forms.CharField(required=False)
+        one_five_prcnt = forms.CharField(required=False)
+        one_prcnt_frst = forms.CharField(required=False)
+        one_prcnt_scnd = forms.CharField(required=False)
+        widgets = {
+            'dv_date': forms.DateInput(attrs={'type': 'date'}),
+        }
 
 class DocumentStatusUpdateForm(forms.ModelForm):
     class Meta:

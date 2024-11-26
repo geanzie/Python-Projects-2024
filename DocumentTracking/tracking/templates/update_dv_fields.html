@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_filters %}
 
 {% block content %}
 <div class="container">
@@ -10,147 +11,56 @@
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="dv_number">Disbursement Voucher Number (000-00-00-0000):</label>
-                        <input type="text" placeholder="000-00-00-0000" id="dv_number" name="dv_number" class="form-control" value="{{ document.dv_number }}">
+                        <input type="text" placeholder="000-00-00-0000" id="dv_number" name="dv_number" class="form-control" value="{{ document.dv_number }}" required>
                     </div>
                     <div class="form-group">
                         <label for="dv_date">Disbursement Voucher Date:</label>
-                        <input type="date" id="dv_date" name="dv_date" class="form-control" value="{{ document.dv_date }}">
+                        <input type="date" id="dv_date" name="dv_date" class="form-control" value="{{ document.dv_date }}" required>
                     </div>
                     <div class="form-group">
                         <label for="net_amount">Net Amount:</label>
-                        <input type="number" step="0.01" id="net_amount" name="net_amount" class="form-control" value="{{ document.net_amount }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="percentages">Select Percentage:</label>
-                        <select id="percentages" name="percentages" class="form-control">
-                            {% for key, value in percentages.items %}
-                                <option value="{{ value }}">{{ key }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>                    
-                    <div id="percentage-fields">
-                        <!-- Dynamically added fields based on selection -->
-                    </div>
+                        <input type="number" step="0.01" id="net_amount" name="net_amount" class="form-control" value="{{ document.net_amount }}" required>
+                    </div> 
                     <!-- Table to show selected percentage and value -->
-                        <table class="table table-bordered mt-4" id="percentage-table">
-                            <thead>
+                     <h4>Deductions:</h4>
+                    <table class="table table-bordered mt-4" id="percentage-table">
+                        <thead>
+                            <tr>
+                                <th>Percentage</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if not percentageData %}
                                 <tr>
-                                    <th>Percentage</th>
-                                    <th>Value</th>
-                                    <th>Action</th> <!-- Action column with delete button -->
+                                    <td colspan="3" class="text-center">No percentages added yet.</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Dynamic rows will be added here -->
-                            </tbody>
-                        </table>
-                    <button type="submit" class="btn btn-success">Save</button>
+                            {% else %}
+                                <!-- Dynamic rows for each percentage -->
+                                {% for percentage, field_name in percentages.items %}
+                                    <tr>
+                                        <td>{{ percentage }}</td>
+                                        <td>
+                                            <input type="number" name="{{ field_name }}" value="{{ field_name }}" step="any" class="form-control" />
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    
+                        <button type="submit" class="btn btn-success">
+                            {% if document.pk %}
+                                Update
+                            {% else %}
+                                Save
+                            {% endif %}
+                        </button>                        
                 </form>
             </div>
         </div>
     </div>
 </div>
-<script>
-    // Initialize a dictionary to store the input data temporarily
-    let percentageData = {};
-
-    document.getElementById('percentages').addEventListener('change', function () {
-        const selectedOptions = Array.from(this.selectedOptions).map(option => option.value);
-        const percentageFieldsDiv = document.getElementById('percentage-fields');
-        percentageFieldsDiv.innerHTML = ''; // Clear any existing fields
-
-        selectedOptions.forEach(function (field) {
-            // Create a wrapper div for each percentage field
-            const percentageWrapper = document.createElement('div');
-            percentageWrapper.className = 'percentage-wrapper mb-3 d-flex'; // Flexbox for layout
-
-            // Add a label for each percentage
-            const label = document.createElement('label');
-            label.setAttribute('for', field);
-            
-            // Create the input field for each percentage
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.step = '0.01';
-            input.id = field;
-            input.name = field;  // Use the percentage name as the input name
-            input.className = 'form-control mb-2'; // Add margin between inputs
-            input.style.width = 'calc(100% - 80px)'; // Adjust width for input
-
-            // Create the "Add" button
-            const addButton = document.createElement('button');
-            addButton.type = 'button';
-            addButton.className = 'btn btn-success btn-sm ml-2';
-            addButton.textContent = 'Add';
-
-            // Create a container for the success message
-            const messageContainer = document.createElement('div');
-            messageContainer.className = 'message-container mt-2'; // Add margin to separate from inputs
-            messageContainer.style.display = 'none'; // Hide the message initially
-            percentageWrapper.appendChild(messageContainer);
-
-            // Add click event to store the input value in the dictionary when "Add" is clicked
-            addButton.addEventListener('click', function() {
-                const inputValue = input.value;
-                if (inputValue) {
-                    // Temporarily store the value in the dictionary with the percentage as the key
-                    percentageData[field] = inputValue;
-
-                    // Update the table with the new data
-                    updateTable();
-
-                    console.log(percentageData);  // Log the dictionary for debugging
-                }
-            });
-
-            // Append the input field and the "Add" button to the wrapper
-            percentageWrapper.appendChild(label);
-            percentageWrapper.appendChild(input);
-            percentageWrapper.appendChild(addButton);
-            
-            // Append the percentage wrapper to the field container
-            percentageFieldsDiv.appendChild(percentageWrapper);
-        });
-    });
-
-    // Function to update the table with the current data in percentageData
-    function updateTable() {
-        const tableBody = document.getElementById('percentage-table').querySelector('tbody');
-        tableBody.innerHTML = ''; // Clear the table before adding new rows
-
-        // Loop through the dictionary and add rows to the table
-        for (let percentage in percentageData) {
-            const row = document.createElement('tr');
-            
-            const percentageCell = document.createElement('td');
-            percentageCell.textContent = percentage.replace('_', ' '); // Format the percentage label
-            row.appendChild(percentageCell);
-
-            const valueCell = document.createElement('td');
-            valueCell.textContent = percentageData[percentage]; // Add the corresponding value
-            row.appendChild(valueCell);
-
-            // Create a delete button in the "Action" column
-            const actionCell = document.createElement('td');
-            const deleteButton = document.createElement('button');
-            deleteButton.className = 'btn btn-danger btn-sm';
-            deleteButton.textContent = 'Delete';
-
-            // Delete button functionality: Remove from dictionary and update table
-            deleteButton.addEventListener('click', function() {
-                delete percentageData[percentage];  // Remove from dictionary
-                updateTable();  // Update the table after deletion
-            });
-
-            actionCell.appendChild(deleteButton);
-            row.appendChild(actionCell); // Add the action (delete) button to the row
-
-            tableBody.appendChild(row); // Add the row to the table
-        }
-    }
-</script>
-
-
 <style>
     .percentage-wrapper {
         margin-bottom: 15px; /* Space between different percentage input fields */
@@ -160,8 +70,4 @@
         width: 100%; /* Ensure input fields span the full width */
     }
 </style>
-
-
-
-
 {% endblock %}

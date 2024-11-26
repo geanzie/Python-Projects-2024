@@ -747,15 +747,37 @@ class UpdateDVFieldsView(View):
     template_name = 'update_dv_fields.html'
 
     def get(self, request, pk, *args, **kwargs):
+        # Log that the GET request was triggered
+        print(f"GET request received for document ID: {pk}")
+
         # Get the document by ID
         document = get_object_or_404(Document, pk=pk)
+        print(f"Document fetched: {document}")
+
+        # Initialize default values for percentage fields
+        percentage_fields = {
+            'six_prcnt': Decimal('0.00'),
+            'five_prcnt': Decimal('0.00'),
+            'three_prcnt': Decimal('0.00'),
+            'two_prcnt': Decimal('0.00'),
+            'one_five_prcnt': Decimal('0.00'),
+            'one_prcnt_frst': Decimal('0.00'),
+            'one_prcnt_scnd': Decimal('0.00'),
+        }
+
+        # Update the percentage fields with actual document values if available
+        for field, default_value in percentage_fields.items():
+            if getattr(document, field, None) is not None:
+                percentage_fields[field] = getattr(document, field)  # Use document value if available
+
+        print(f"Initialized percentage fields with values: {percentage_fields}")
 
         # Create the form pre-populated with the document's current data
         form = AccountingForm(instance=document)
+        print(f"Form initialized with document data: {form.initial}")
 
         # Define the percentage fields mapping
         percentages = {
-            '':'',
             '6%': 'six_prcnt',
             '5%': 'five_prcnt',
             '3%': 'three_prcnt',
@@ -764,33 +786,73 @@ class UpdateDVFieldsView(View):
             '1% (First)': 'one_prcnt_frst',
             '1% (Second)': 'one_prcnt_scnd',
         }
+        print(f"Percentages mapping: {percentages}")
 
         # Provide the form and document to the template
         context = {
             'form': form,
             'document': document,
-            'percentages': percentages
+            'percentages': percentages,
+            'percentageData': percentage_fields,  # Add percentage fields with default or actual values
         }
+        print("Context prepared for rendering.")
         return render(request, self.template_name, context)
 
     def post(self, request, pk, *args, **kwargs):
-        # Get the document by ID
+        print(f"POST request received for document ID: {pk}")
+
+        # Fetch the document
         document = get_object_or_404(Document, pk=pk)
+        print(f"Document fetched: {document}")
 
-        # Create the form with the submitted POST data, pre-populating with the document's data
+        # Loop through the percentage fields and update them if they are provided in the request
+        percentage_fields = {
+            'six_prcnt': Decimal('0.00'),
+            'five_prcnt': Decimal('0.00'),
+            'three_prcnt': Decimal('0.00'),
+            'two_prcnt': Decimal('0.00'),
+            'one_five_prcnt': Decimal('0.00'),
+            'one_prcnt_frst': Decimal('0.00'),
+            'one_prcnt_scnd': Decimal('0.00'),
+        }
+        
+        # Create a form instance with POST data
         form = AccountingForm(request.POST, instance=document)
+        print(f"Form data received: {request.POST}")
 
-        # Check if the form is valid
         if form.is_valid():
-            # Save the updated document fields
+            print("Form is valid. Saving document...")
             form.save()
+            print(f"Document updated with form data: {document}")
 
-            # Redirect to the document list or another appropriate page
-            return redirect(reverse_lazy('document_list'))
+            # Process dynamically added percentage fields
+            percentage_fields = [
+                'six_prcnt', 'five_prcnt', 'three_prcnt', 'two_prcnt', 
+                'one_five_prcnt', 'one_prcnt_frst', 'one_prcnt_scnd'
+            ]
 
-        # If the form is not valid, re-render the form with errors
+            # Loop through the percentage fields and ensure they are set correctly
+            for field in percentage_fields:
+                if field in request.POST and request.POST[field]:
+                    # If the field is present in the POST data and has a value, update it
+                    print(f"Updating field '{field}' with value: {request.POST[field]}")
+                    # Ensure the value is a valid decimal
+                    setattr(document, field, Decimal(request.POST[field]))
+                else:
+                    # If the field is missing in the POST data, set the default value (0.00)
+                    print(f"Field '{field}' is missing in the request. Setting default value to Decimal('0.00').")
+                    setattr(document, field, Decimal('0.00'))
+
+            # Save the updated document with any percentage fields
+            document.save()
+            print("Document saved with updated percentage fields.")
+
+            return redirect('document_list')
+        else:
+            print("Form is invalid. Errors:", form.errors)
+
         return render(request, self.template_name, {'form': form, 'document': document})
-    
+
 class CheckDocumentStatusUpdates(LoginRequiredMixin, View):
     def get(self, request):
         # Retrieve the department of the logged-in user

@@ -36,6 +36,11 @@
                 </td>
                 <td class="status-cell">{{ document.document_status }}</td>
                 <td>
+                    {% if user.profile.department.name == "MUNICIPAL ACCOUNTING OFFICE" and document.initial_department.name == "MUNICIPAL BUDGET'S OFFICE" %}
+                        <a href="{% url 'update_dv_fields' document.id %}" class="btn btn-warning btn-sm">
+                            Update DV Fields
+                        </a>
+                    {% endif %}
                     {% if document.initial_department == user.profile.department %}
                         <a href="{% url 'document_edit' document.pk %}" class="btn btn-info">Edit</a>
                         {% if document.forwarded_to == user.profile.department or document.forwarded_to is None %}

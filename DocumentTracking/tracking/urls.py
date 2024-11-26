@@ -18,6 +18,7 @@ from .views import (
     DocumentUpdateStatusView,
     CheckDocumentStatusUpdates,
     DashboardStatusListView,
+    UpdateDVFieldsView,
 )
 
 urlpatterns = [
@@ -35,6 +36,7 @@ urlpatterns = [
     path('documents/<int:pk>/history/', DocumentHistoryView.as_view(), name='document_history'),  # Document history
     path('activity/', DocumentActivityView.as_view(), name='document_activity'),  # Document activity log
 
+    path('documents/<int:pk>/update-dv-fields/', UpdateDVFieldsView.as_view(), name='update_dv_fields'),
     path('dashboard/status-list/', DashboardStatusListView.as_view(), name='dashboard_status_list'),
     path('document-activities/<str:obligation_number>/', views.document_activity_detail, name='document_activity_detail'),
     path('documents/edit/<int:pk>/', DocumentEditView.as_view(), name='document_edit'),

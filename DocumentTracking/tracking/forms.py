@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from .models import Document, Department, DocumentStatus
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
-from django.core.validators import RegexValidator
+from django.forms import widgets
 
 
 class UserRegistrationForm(forms.ModelForm):
@@ -29,15 +29,29 @@ class UserRegistrationForm(forms.ModelForm):
             user.save()
         return user
     
+
 class DocumentForm(forms.ModelForm):
     class Meta:
         model = Document
-        fields = ['obligation_number', 'payee', 'description', 'amount', 'file_upload']
+        fields = ['obligation_number','obr_date','expense_class','rc_code','account_code', 'payee', 'description', 'amount', 'file_upload']
 
     def __init__(self, *args, **kwargs):
         super(DocumentForm, self).__init__(*args, **kwargs)
+        self.fields['obr_date'].widget = widgets.DateInput(attrs={'type': 'date'})
         self.helper = FormHelper()
         self.helper.add_input(Submit('submit', 'Create Document'))
+from datetime import date
+#For accounting
+class AccountingForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = ['net_amount', 'six_prcnt', 'five_prcnt', 'three_prcnt', 'two_prcnt', 'one_five_prcnt', 'one_prcnt_frst', 'one_prcnt_scnd', 'dv_number', 'dv_date']
+
+    # Optional: Custom validations for specific fields
+    def clean_dv_number(self):
+        dv_number = self.cleaned_data.get('dv_number')
+        # Add custom validation for the DV number if needed
+        return dv_number
 
 class DocumentStatusUpdateForm(forms.ModelForm):
     class Meta:

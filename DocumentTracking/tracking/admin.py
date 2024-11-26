@@ -3,11 +3,7 @@ from .models import Profile, Document, DocumentStatus, DocumentActivity
 
 admin.site.register(Profile)
 
-@admin.register(Document)
-class DocumentAdmin(admin.ModelAdmin):
-    list_display = ('payee', 'created_by', 'initial_department', 'current_status', 'created_at')
-    search_fields = ('payee', 'description', 'created_by__username')
-    list_filter = ('current_status', 'initial_department')
+admin.site.register(Document)
 
 @admin.register(DocumentStatus)
 class DocumentStatusAdmin(admin.ModelAdmin):

@@ -15,7 +15,7 @@ from django.views.generic.edit import CreateView
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from .models import Profile
-from .forms import UserRegistrationForm, DocumentStatusUpdateForm  # Ensure this is your custom form with the department field
+from .forms import UserRegistrationForm, DocumentStatusUpdateForm, AccountingForm  # Ensure this is your custom form with the department field
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
@@ -76,7 +76,6 @@ class UserLogoutView(LogoutView):
         logout(request)
         return super().get(request, *args, **kwargs)
 
-
 class DocumentCreateView(LoginRequiredMixin, CreateView):
     model = Document
     form_class = DocumentForm
@@ -84,75 +83,73 @@ class DocumentCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('document_list')
 
     def form_valid(self, form):
-        print("Inside form_valid method")  # Debugging
+        print("Inside form_valid method")  # Check if this method is executed
 
         # Check if the form is valid
         if not form.is_valid():
-            print(f"Form errors: {form.errors}")  # Debugging
+            print(f"Form errors: {form.errors}")  # Output form errors
             return self.form_invalid(form)
         else:
-            print(f"Form errors: {form.errors}")
-        
+            print("Form is valid")  # Confirm the form is valid
+
         # Retrieve the user's department
         user_department = getattr(self.request.user.profile, 'department', None)
-        print(f"User's department retrieved: {user_department}")  # Debugging
+        print(f"User's department: {user_department}")  # Output user's department
 
         if not user_department:
-            print("Error: No department found in user's profile.")  # Debugging
+            print("No department found in user's profile")  # Output error if no department
             messages.error(self.request, "Your profile does not have an assigned department.")
             return self.form_invalid(form)
 
         try:
             with transaction.atomic():
-                print("Starting transaction")  # Debugging
-
+                print("Starting transaction")  # Indicate start of transaction
+                
                 # Attempt to save the document
                 document = form.save(commit=False)
                 document.initial_department = user_department
                 document.status = 'In Process'
-                print(f"Document before save: {document}")  # Debugging
+                print(f"Document to save: {document}")  # Output document data before saving
                 document.save()
-                print(f"Document saved with ID: {document.id}")  # Debugging
+                print(f"Document saved with ID: {document.id}")  # Confirm document save
 
-                # Ensure that DocumentStatus is created only if the document was saved successfully
                 if document.id:
                     DocumentStatus.objects.create(
                         document=document,
                         department=document.initial_department,
                         status=document.status
                     )
-                    print("DocumentStatus entry created")  # Debugging
-                    messages.success(self.request, "Document created and initial status recorded.")
-                    
-                    # Create DocumentActivity for the creation action
+                    print("DocumentStatus entry created")  # Confirm DocumentStatus creation
+
                     DocumentActivity.objects.create(
                         document=document,
                         action="Created",
                         performed_by=self.request.user,
-                        timestamp=document.created_at  # Ensure the timestamp is correctly set
+                        timestamp=document.created_at
                     )
-                    print("DocumentActivity entry created")
+                    print("DocumentActivity entry created")  # Confirm DocumentActivity creation
 
                 else:
-                    print("Error: Document save failed - No document ID.")  # Debugging
+                    print("Document save failed - No document ID")  # Output error if document not saved
                     raise IntegrityError("Document save failed - No document ID.")
 
-            # After successful save, render an empty form
+            print("Transaction completed successfully")  # Confirm successful transaction
             return redirect(self.success_url)
 
         except IntegrityError as e:
-            print(f"IntegrityError occurred: {e}")  # Debugging
+            print(f"IntegrityError: {e}")  # Output IntegrityError
             messages.error(self.request, f"Error creating document: {str(e)}")
             return self.form_invalid(form)
         except Exception as ex:
-            print(f"Unexpected error occurred: {ex}")  # Debugging
+            print(f"Unexpected error: {ex}")  # Output any other exception
             messages.error(self.request, "An unexpected error occurred while creating the document.")
             return self.form_invalid(form)
-
+        
     def get_context_data(self, **kwargs):
-        # Ensure the context includes the form for rendering
+        print("Inside get_context_data")  # Check if this method is executed
         context = super().get_context_data(**kwargs)
         context['form'] = DocumentForm()  # Provide a fresh form for the template
+        print("Context data set")  # Confirm context data setup
         return context
 
 
@@ -742,6 +739,57 @@ class DocumentUpdateStatusView(LoginRequiredMixin, View):
                 'document': document,
                 'form': form,
             })
+        
+from decimal import Decimal
+
+#Document Update for accounting
+class UpdateDVFieldsView(View):
+    template_name = 'update_dv_fields.html'
+
+    def get(self, request, pk, *args, **kwargs):
+        # Get the document by ID
+        document = get_object_or_404(Document, pk=pk)
+
+        # Create the form pre-populated with the document's current data
+        form = AccountingForm(instance=document)
+
+        # Define the percentage fields mapping
+        percentages = {
+            '':'',
+            '6%': 'six_prcnt',
+            '5%': 'five_prcnt',
+            '3%': 'three_prcnt',
+            '2%': 'two_prcnt',
+            '1.5%': 'one_five_prcnt',
+            '1% (First)': 'one_prcnt_frst',
+            '1% (Second)': 'one_prcnt_scnd',
+        }
+
+        # Provide the form and document to the template
+        context = {
+            'form': form,
+            'document': document,
+            'percentages': percentages
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, pk, *args, **kwargs):
+        # Get the document by ID
+        document = get_object_or_404(Document, pk=pk)
+
+        # Create the form with the submitted POST data, pre-populating with the document's data
+        form = AccountingForm(request.POST, instance=document)
+
+        # Check if the form is valid
+        if form.is_valid():
+            # Save the updated document fields
+            form.save()
+
+            # Redirect to the document list or another appropriate page
+            return redirect(reverse_lazy('document_list'))
+
+        # If the form is not valid, re-render the form with errors
+        return render(request, self.template_name, {'form': form, 'document': document})
     
 class CheckDocumentStatusUpdates(LoginRequiredMixin, View):
     def get(self, request):

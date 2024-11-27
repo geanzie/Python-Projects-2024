@@ -25,6 +25,7 @@ from django.contrib.auth.models import User
 from .models import DocumentActivity
 from django.core.paginator import Paginator
 from datetime import datetime
+from decimal import Decimal
 
 
 # User Registration View
@@ -75,7 +76,7 @@ class UserLogoutView(LogoutView):
     def get(self, request, *args, **kwargs):
         logout(request)
         return super().get(request, *args, **kwargs)
-
+from .models import ResponseCenter
 class DocumentCreateView(LoginRequiredMixin, CreateView):
     model = Document
     form_class = DocumentForm
@@ -149,6 +150,7 @@ class DocumentCreateView(LoginRequiredMixin, CreateView):
         print("Inside get_context_data")  # Check if this method is executed
         context = super().get_context_data(**kwargs)
         context['form'] = DocumentForm()  # Provide a fresh form for the template
+        context['responsibility_centers'] = ResponseCenter.objects.all()  # Include Responsibility Centers
         print("Context data set")  # Confirm context data setup
         return context
 
@@ -484,7 +486,6 @@ class UserLoginView(View):
         messages.error(request, 'Invalid username or password.')
         return render(request, 'accounts/login.html')
 
-
 class DocumentReceivedView(LoginRequiredMixin, View):
     def post(self, request, pk):
         # Retrieve the most recent DocumentStatus for the given document
@@ -525,8 +526,6 @@ class DocumentReceivedView(LoginRequiredMixin, View):
             messages.error(request, 'Document status not found.')
 
         return redirect('document_list')
-
-
 
 class DocumentActivityView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -740,10 +739,8 @@ class DocumentUpdateStatusView(LoginRequiredMixin, View):
                 'form': form,
             })
         
-from decimal import Decimal
-
 #Document Update for accounting
-class UpdateDVFieldsView(View):
+class UpdateDVFieldsView(LoginRequiredMixin, View):
     template_name = 'update_dv_fields.html'
 
     def get(self, request, pk, *args, **kwargs):
@@ -753,7 +750,7 @@ class UpdateDVFieldsView(View):
         # Get the document by ID
         document = get_object_or_404(Document, pk=pk)
         print(f"Document fetched: {document}")
-
+        
         # Initialize default values for percentage fields
         percentage_fields = {
             'six_prcnt': Decimal('0.00'),

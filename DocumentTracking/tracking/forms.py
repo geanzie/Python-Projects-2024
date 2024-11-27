@@ -33,7 +33,7 @@ class UserRegistrationForm(forms.ModelForm):
 class DocumentForm(forms.ModelForm):
     class Meta:
         model = Document
-        fields = ['obligation_number','obr_date','expense_class','rc_code','account_code', 'payee', 'description', 'amount', 'file_upload']
+        fields = ['obligation_number','obr_date','expense_class','payee', 'description', 'amount', 'file_upload']
 
     def __init__(self, *args, **kwargs):
         super(DocumentForm, self).__init__(*args, **kwargs)

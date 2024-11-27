@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'simple_history',
     'bootstrap4',
+    'bootstrap5',
 ]
 
 MIDDLEWARE = [

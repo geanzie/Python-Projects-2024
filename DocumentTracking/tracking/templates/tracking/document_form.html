@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-10">
+        <div class="col-md-12">
             <div class="card">
             <form method="post" enctype="multipart/form-data" action="" class="p-4 border border-primary rounded shadow">
                 <h2>Create Document</h2>
@@ -17,17 +17,17 @@
                             {% bootstrap_field form.obligation_number %}
                         </div>
                         <div class="form-group">
-                            {% bootstrap_field form.obr_date %}
+                            {% bootstrap_field form.payee %}
+                        </div>
+                        <div class="form-group">
+                            <p>Amount</p>
+                            <!-- {% bootstrap_field form.amount %} -->
+                            <input type="text" name="amount" id="total-amount" class="form-control" readonly>
                         </div>
                         <div class="form-group">
                             {% bootstrap_field form.expense_class %}
                         </div>
-                        <div class="form-group">
-                            {% bootstrap_field form.payee %}
-                        </div>
-                        <div class="form-group">
-                            {% bootstrap_field form.amount %}
-                        </div>
+                        <p>Responsibility Center</p>
                         <!-- Responsibility Center and Amount Inputs -->
                         <div id="responsibility-center-container">
                             <!-- Dynamic Inputs Section -->
@@ -47,12 +47,15 @@
                     <!-- Second Column -->
                     <div class="col-md-6">
                         <div class="form-group">
+                            {% bootstrap_field form.obr_date %}
+                        </div>
+                        <div class="form-group">
                             {% bootstrap_field form.description %}
                         </div>
                         <div class="form-group">
                             {% bootstrap_field form.file_upload %}
                         </div>
-                        <div class="form-group text-left mt-4">
+                        <div class="form-group text-right mt-4">
                             <button type="submit" onclick="addAmountField()" class="btn btn-primary">Create Document</button>
                         </div>
                     </div>
@@ -63,15 +66,33 @@
 </div>
 </div>
 
-<!-- JavaScript for Dynamic Input Rows -->
+<!-- JavaScript for Dynamic Input Rows with Debugging Logs -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        console.log("DOM fully loaded and parsed.");
+
         const container = document.getElementById('responsibility-center-container');
         const totalAmountField = document.getElementById('total-amount'); // Reference to the Total Amount field
 
+        if (!container) {
+            console.error("Container element with id 'responsibility-center-container' not found.");
+        } else {
+            console.log("Container element found:", container);
+        }
+
+        if (!totalAmountField) {
+            console.error("Total Amount field with id 'total-amount' not found.");
+        } else {
+            console.log("Total Amount field found:", totalAmountField);
+        }
+
         // Event listener for adding new input rows
         container.addEventListener('click', function (e) {
+            console.log("Click event detected in container:", e.target);
+
             if (e.target.classList.contains('add-input')) {
+                console.log("Add Input button clicked.");
+
                 const inputGroup = document.createElement('div');
                 inputGroup.className = 'input-group mb-3';
 
@@ -88,39 +109,71 @@
                 `;
 
                 container.appendChild(inputGroup);
+                console.log("New input group added:", inputGroup);
+
                 attachInputListener(inputGroup.querySelector('input[name="amount[]"]')); // Attach input listener to new amount field
             }
 
             // Event listener for removing input rows
             if (e.target.classList.contains('remove-input')) {
-                e.target.closest('.input-group').remove();
+                console.log("Remove Input button clicked.");
+
+                const inputGroupToRemove = e.target.closest('.input-group');
+                if (inputGroupToRemove) {
+                    inputGroupToRemove.remove();
+                    console.log("Input group removed:", inputGroupToRemove);
+                } else {
+                    console.error("Failed to find the input group to remove.");
+                }
+
                 updateTotalAmount(); // Recalculate total after removing a row
             }
         });
 
         // Attach listener for existing amount inputs
         function attachInputListener(input) {
-            input.addEventListener('input', updateTotalAmount);
+            if (input) {
+                input.addEventListener('input', updateTotalAmount);
+                console.log("Input listener attached to field:", input);
+            } else {
+                console.error("Input field is null or undefined. Cannot attach listener.");
+            }
         }
 
         // Update total amount field
         function updateTotalAmount() {
+            console.log("Updating total amount...");
             let total = 0;
 
             // Gather all amount inputs and sum their values
             const amountFields = document.querySelectorAll('input[name="amount[]"]');
+            console.log("Found amount fields:", amountFields);
+
             amountFields.forEach(field => {
                 const value = parseFloat(field.value);
+                console.log(`Value in field ${field.name}:`, value);
+
                 if (!isNaN(value)) {
                     total += value;
                 }
             });
 
-            totalAmountField.value = total.toFixed(2); // Update total amount field with 2 decimal places
+            console.log("Calculated total amount:", total);
+
+            // Update total amount field
+            if (totalAmountField) {
+                totalAmountField.value = total.toFixed(2); // Update total amount field with 2 decimal places
+                console.log("Total Amount field updated to:", totalAmountField.value);
+            } else {
+                console.error("Total Amount field is null or undefined. Cannot update value.");
+            }
         }
 
         // Attach listeners to existing amount fields on page load
-        document.querySelectorAll('input[name="amount[]"]').forEach(attachInputListener);
+        const existingAmountFields = document.querySelectorAll('input[name="amount[]"]');
+        console.log("Attaching listeners to existing amount fields:", existingAmountFields);
+
+        existingAmountFields.forEach(attachInputListener);
     });
 </script>
 {% endblock %}

@@ -12,6 +12,7 @@ class Department(models.Model):
     def __str__(self):
         return self.name
 
+
 class AccountCode(models.Model):
     expense_class = models.CharField(max_length=45)
     account_codes = models.CharField(max_length=45)
@@ -29,20 +30,20 @@ class Document(models.Model):
     # Document Information
     obligation_number = models.CharField(
     max_length=14, unique=True,
-    validators=[RegexValidator(regex=r'^\d{3}-\d{2}-\d{2}-\d{4}$', message='Number must be in the format 000-00-00-0000')], verbose_name="Obligation Request Number")  # Set a default value
+    validators=[RegexValidator(regex=r'^\d{3}-\d{2}-\d{2}-\d{4}$', message='Number must be in the format 000-00-00-0000')], verbose_name="Obligation Request Number", error_messages="Incorrect Format!")  # Set a default value
     obr_date = models.DateField(default=date.today, verbose_name="Obligation Request Date")
     EXPENSE_CHOICES = [
     ('MOOE', 'MOOE'),
     ('PS', 'PS'),
     ('CO', 'CO'),
     ]
-    expense_class = models.CharField(max_length=10, help_text="Expense Class", choices=EXPENSE_CHOICES, null=True, verbose_name="Expense Class")
+    expense_class = models.CharField(max_length=10, choices=EXPENSE_CHOICES, null=True, verbose_name="Expense Class")
     rc_code = models.ForeignKey(ResponseCenter, on_delete=models.SET_NULL, help_text="Responsibility Center", null=True, verbose_name="Responsibility Center")
     account_code = models.ForeignKey(AccountCode, on_delete=models.SET_NULL, help_text="Account Code", null=True, verbose_name="Account Code")
-    payee = models.CharField(max_length=255, help_text="Payee of the Document")
-    description = models.TextField(help_text="Description of the Document", error_messages="This field is required.", blank=False)
+    payee = models.CharField(max_length=255)
+    description = models.TextField(error_messages="This field is required.", blank=False)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    file_upload = models.FileField(upload_to='documents/', help_text="Upload the document file")
+    file_upload = models.FileField(upload_to='documents/')
         
     # Initial Department
     initial_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='encoder_department', help_text="Department from which the document was encoded")
@@ -59,20 +60,26 @@ class Document(models.Model):
         self.save()
 
     #New tables to accommodate the other system in treasury
-    net_amount = models.DecimalField(max_digits=12, decimal_places=2,  default=Decimal('0.00'), verbose_name="Net Amount")
-    six_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True, default=Decimal('0.00'))
-    five_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
-    three_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
-    two_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
-    one_five_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
-    one_prcnt_frst = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
-    one_prcnt_scnd = models.DecimalField(max_digits=12, decimal_places=2,blank=True, null=True,  default=Decimal('0.00'))
+    net_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name="Net Amount")
+    six_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, default=Decimal('0.00'))
+    five_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, default=Decimal('0.00'))
+    three_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, default=Decimal('0.00'))
+    two_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, default=Decimal('0.00'))
+    one_five_prcnt = models.DecimalField(max_digits=12, decimal_places=2,blank=True, default=Decimal('0.00'))
+    one_prcnt_frst = models.DecimalField(max_digits=12, decimal_places=2,blank=True, default=Decimal('0.00'))
+    one_prcnt_scnd = models.DecimalField(max_digits=12, decimal_places=2,blank=True, default=Decimal('0.00'))
     dv_number = models.CharField(
         max_length=14,
         validators=[RegexValidator(regex=r'^\d{3}-\d{2}-\d{2}-\d{4}$', message='Number must be in the format 000-00-00-0000')], verbose_name="Disbursement Voucher Number")  
     dv_date = models.DateField(null=True, verbose_name="Disbursement Voucher Date")
 
+class ResponsibilityCenter(models.Model):
+    rc_code = models.CharField(max_length=45, blank=True, default=0)
+    amount = models.DecimalField(max_digits=12, decimal_places=2,default=Decimal('0.00'), blank=True)
+    document = models.ForeignKey(Document, on_delete=models.SET_NULL, null=True, blank=True)
 
+    def __str__(self):
+        return self.rc_code
 
 class DocumentStatus(models.Model):
     STATUS_CHOICES = [

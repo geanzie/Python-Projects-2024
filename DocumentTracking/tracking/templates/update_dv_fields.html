@@ -4,58 +4,66 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg p-4 rounded">
-                <h2>Update DV Fields</h2>
-                <form method="post">
+        <div class="col-md-12">
+            <div class="card">
+                <form method="post" enctype="multipart/form-data" action="" class="p-4 border border-primary rounded shadow">
+                    <h2>Update DV Fields</h2>
                     {% csrf_token %}
-                    <div class="form-group">
-                        <label for="dv_number">Disbursement Voucher Number (000-00-00-0000):</label>
-                        <input type="text" placeholder="000-00-00-0000" id="dv_number" name="dv_number" class="form-control" value="{{ document.dv_number }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="dv_date">Disbursement Voucher Date:</label>
-                        <input type="date" id="dv_date" name="dv_date" class="form-control" value="{{ document.dv_date }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="net_amount">Net Amount:</label>
-                        <input type="number" step="0.01" id="net_amount" name="net_amount" class="form-control" value="{{ document.net_amount }}" required>
-                    </div> 
-                    <!-- Table to show selected percentage and value -->
-                     <h4>Deductions:</h4>
-                    <table class="table table-bordered mt-4" id="percentage-table">
-                        <thead>
-                            <tr>
-                                <th>Percentage</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if not percentageData %}
-                                <tr>
-                                    <td colspan="3" class="text-center">No percentages added yet.</td>
-                                </tr>
-                            {% else %}
-                                <!-- Dynamic rows for each percentage -->
-                                {% for percentage, field_name in percentages.items %}
+                    <div class="row">
+                        <!-- First Column -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="dv_number">Disbursement Voucher Number (000-00-00-0000):</label>
+                                <input type="text" placeholder="000-00-00-0000" id="dv_number" name="dv_number" class="form-control" value="{{ document.dv_number }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dv_date">Disbursement Voucher Date:</label>
+                                <input type="date" id="dv_date" name="dv_date" class="form-control" value="{{ document.dv_date }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="net_amount">Net Amount:</label>
+                                <input type="number" step="0.01" id="net_amount" name="net_amount" class="form-control" value="{{ document.net_amount }}" required>
+                            </div> 
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-success">
+                                    {% if document.pk %}
+                                        Update Fields
+                                    {% else %}
+                                        Save
+                                    {% endif %}
+                                </button>  
+                            </div>
+                        </div>
+                        <!-- Second Row -->
+                        <div class="col-md-6">
+                            <!-- Table to show selected percentage and value -->
+                            <table class="table table-bordered mt-4" id="percentage-table">
+                                <thead>
                                     <tr>
-                                        <td>{{ percentage }}</td>
-                                        <td>
-                                            <input type="number" name="{{ field_name }}" value="{{ field_name }}" step="any" class="form-control" />
-                                        </td>
+                                        <th>Percentage</th>
+                                        <th>Value</th>
                                     </tr>
-                                {% endfor %}
-                            {% endif %}
-                        </tbody>
-                    </table>
-                    
-                        <button type="submit" class="btn btn-success">
-                            {% if document.pk %}
-                                Update
-                            {% else %}
-                                Save
-                            {% endif %}
-                        </button>                        
+                                </thead>
+                                <tbody>
+                                    {% if not percentageData %}
+                                        <tr>
+                                            <td colspan="3" class="text-center">No percentages added yet.</td>
+                                        </tr>
+                                    {% else %}
+                                        <!-- Dynamic rows for each percentage -->
+                                        {% for percentage, field_name in percentages.items %}
+                                            <tr>
+                                                <td>{{ percentage }}</td>
+                                                <td>
+                                                    <input type="number" name="{{ field_name }}" value="{{ field_name }}" step="any" class="form-control" />
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>                 
                 </form>
             </div>
         </div>

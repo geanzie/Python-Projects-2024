@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from .forms import UserRegistrationForm
 from django.views.generic import ListView, DetailView, TemplateView, UpdateView
-from .models import Document, DocumentActivity, DocumentStatus, Department
+from .models import Document, DocumentActivity, DocumentStatus, Department, ResponsibilityCenter
 from django.views import View
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
@@ -130,6 +130,18 @@ class DocumentCreateView(LoginRequiredMixin, CreateView):
                     )
                     print("DocumentActivity entry created")  # Confirm DocumentActivity creation
 
+                    # Save Responsibility Center and Amount entries
+                    responsibility_centers = self.request.POST.getlist('responsibility_center[]')  # Get all responsibility center codes
+                    amounts = self.request.POST.getlist('amount[]')  # Get all corresponding amounts
+
+                    for rc_code, amount in zip(responsibility_centers, amounts):
+                        ResponsibilityCenter.objects.create(
+                            rc_code=rc_code,
+                            amount=amount,
+                            document=document
+                        )
+                    print("ResponsibilityCenter entries created")  # Confirm ResponsibilityCenter creation
+                    
                 else:
                     print("Document save failed - No document ID")  # Output error if document not saved
                     raise IntegrityError("Document save failed - No document ID.")

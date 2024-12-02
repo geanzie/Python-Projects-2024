@@ -1,0 +1,12 @@
+<h1>Your Notifications</h1>
+<ul>
+    {% for notification in notifications %}
+        <li>
+            <strong>{{ notification.message }}</strong>
+            <small>{{ notification.timestamp }}</small>
+            {% if not notification.read %}
+                <span class="badge bg-warning">Unread</span>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>

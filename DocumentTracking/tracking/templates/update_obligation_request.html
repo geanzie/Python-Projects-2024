@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% block title %}Update Obligation Request{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card">
+            <form method="post" enctype="multipart/form-data" action="" class="p-4 border border-primary rounded shadow">
+                <h2>Update Obligation Request</h2>
+                    {% csrf_token %}
+                    
+                    <div class="container mt-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <!-- Obligation Number Field -->
+                                <div class="form-group">
+                                    {% bootstrap_field form.obligation_number %}
+                                </div>
+                                <!-- OBR Date Field -->
+                                <div class="form-group">
+                                    {% bootstrap_field form.obr_date %}
+                                </div>
+                                <!-- Expense Class Field -->
+                                <div class="form-group">
+                                    {% bootstrap_field form.expense_class %}
+                                </div>
+                                <div class="form-group">
+                                    <p>Amount</p>
+                                    <input type="text" name="amount" id="total-amount" class="form-control" readonly>
+                                </div>
+                                <div class="form-group" style="display: none;">
+                                    <label for="id_phone_number">Payee</label>
+                                    <input type="text" id="id_payee" name="payee" value="{{ document.payee }}">
+                                </div>
+                                <div class="form-group" style="display: none;">
+                                    <label for="id_phone_number">Description</label>
+                                    <input type="text" id="id_description" name="description" value="{{ document.description }}">
+                                </div>
+                                <div class="form-group" style="display: none;">
+                                    <label for="id_phone_number">Phone Number</label>
+                                    <input type="text" id="id_phone_number" name="phone_number" value="{{ document.phone_number }}">
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <p>Responsibility Center</p>
+                                <!-- Responsibility Center and Amount Inputs -->
+                                <div id="responsibility-center-container">
+                                    <!-- Dynamic Inputs Section -->
+                                    <div class="input-group mb-3">
+                                        <select name="responsibility_center[]" class="form-control" required>
+                                            <option value="" disabled selected>Select Responsibility Center</option>
+                                            {% for center in responsibility_centers %}
+                                                <option value="{{ center.centre_code }}">{{ center.centre_code }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input type="number" step="0.01" name="amount[]" class="form-control mb-3" placeholder="Amount" required oninput="updateTotalAmount()">
+                                        <button type="button" class="btn btn-success mb-3 add-input">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <button type="submit" onclick="addAmountField()" class="btn btn-primary">Save Changes</button>
+                                    <a href="{% url 'document_list' %}" class="btn btn-secondary">Cancel</a>
+                                </div>
+                            </div>
+                            <div class="row">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- JavaScript for Dynamic Input Rows with Debugging Logs -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log("DOM fully loaded and parsed.");
+
+        const container = document.getElementById('responsibility-center-container');
+        const totalAmountField = document.getElementById('total-amount'); // Reference to the Total Amount field
+
+        if (!container) {
+            console.error("Container element with id 'responsibility-center-container' not found.");
+        } else {
+            console.log("Container element found:", container);
+        }
+
+        if (!totalAmountField) {
+            console.error("Total Amount field with id 'total-amount' not found.");
+        } else {
+            console.log("Total Amount field found:", totalAmountField);
+        }
+
+        // Event listener for adding new input rows
+        container.addEventListener('click', function (e) {
+            console.log("Click event detected in container:", e.target);
+
+            if (e.target.classList.contains('add-input')) {
+                console.log("Add Input button clicked.");
+
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'input-group mb-3';
+
+                // Dynamic input row with Responsibility Center dropdown
+                inputGroup.innerHTML = `
+                    <select name="responsibility_center[]" class="form-control" required>
+                        <option value="" disabled selected>Select Responsibility Center</option>
+                        {% for center in responsibility_centers %}
+                            <option value="{{ center.centre_code }}">{{ center.centre_code }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" step="0.01" name="amount[]" class="form-control" placeholder="Amount" required>
+                    <button type="button" class="btn btn-danger remove-input">-</button>
+                `;
+
+                container.appendChild(inputGroup);
+                console.log("New input group added:", inputGroup);
+
+                attachInputListener(inputGroup.querySelector('input[name="amount[]"]')); // Attach input listener to new amount field
+            }
+
+            // Event listener for removing input rows
+            if (e.target.classList.contains('remove-input')) {
+                console.log("Remove Input button clicked.");
+
+                const inputGroupToRemove = e.target.closest('.input-group');
+                if (inputGroupToRemove) {
+                    inputGroupToRemove.remove();
+                    console.log("Input group removed:", inputGroupToRemove);
+                } else {
+                    console.error("Failed to find the input group to remove.");
+                }
+
+                updateTotalAmount(); // Recalculate total after removing a row
+            }
+        });
+
+        // Attach listener for existing amount inputs
+        function attachInputListener(input) {
+            if (input) {
+                input.addEventListener('input', updateTotalAmount);
+                console.log("Input listener attached to field:", input);
+            } else {
+                console.error("Input field is null or undefined. Cannot attach listener.");
+            }
+        }
+
+        // Update total amount field
+        function updateTotalAmount() {
+            console.log("Updating total amount...");
+            let total = 0;
+
+            // Gather all amount inputs and sum their values
+            const amountFields = document.querySelectorAll('input[name="amount[]"]');
+            console.log("Found amount fields:", amountFields);
+
+            amountFields.forEach(field => {
+                const value = parseFloat(field.value);
+                console.log(`Value in field ${field.name}:`, value);
+
+                if (!isNaN(value)) {
+                    total += value;
+                }
+            });
+
+            console.log("Calculated total amount:", total);
+
+            // Update total amount field
+            if (totalAmountField) {
+                totalAmountField.value = total.toFixed(2); // Update total amount field with 2 decimal places
+                console.log("Total Amount field updated to:", totalAmountField.value);
+            } else {
+                console.error("Total Amount field is null or undefined. Cannot update value.");
+            }
+        }
+
+        // Attach listeners to existing amount fields on page load
+        const existingAmountFields = document.querySelectorAll('input[name="amount[]"]');
+        console.log("Attaching listeners to existing amount fields:", existingAmountFields);
+
+        existingAmountFields.forEach(attachInputListener);
+    });
+</script>
+{% endblock %}

@@ -7,6 +7,7 @@ from django.forms import widgets
 
 
 class UserRegistrationForm(forms.ModelForm):
+    email = forms.EmailField(widget=forms.EmailInput, label="Email")
     password1 = forms.CharField(widget=forms.PasswordInput, label="Password")
     password2 = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
     department = forms.ModelChoiceField(queryset=Department.objects.all(), required=True)
@@ -33,11 +34,13 @@ class UserRegistrationForm(forms.ModelForm):
 class DocumentForm(forms.ModelForm):
     class Meta:
         model = Document
-        fields = ['obligation_number','obr_date','expense_class','payee', 'description', 'amount', 'file_upload']
+        fields = ['obligation_number','obr_date','expense_class','payee','phone_number', 'description', 'amount', 'file_upload']
 
     def __init__(self, *args, **kwargs):
         super(DocumentForm, self).__init__(*args, **kwargs)
         self.fields['obr_date'].widget = widgets.DateInput(attrs={'type': 'date'})
+        self.fields['payee'].required = False
+        self.fields['description'].required = False
         self.helper = FormHelper()
         self.helper.add_input(Submit('submit', 'Create Document'))
 
@@ -74,3 +77,20 @@ class DocumentStatusUpdateForm(forms.ModelForm):
         widget=forms.Select(attrs={'onchange': 'toggleDepartmentDropdown()'})
     )
     department = forms.ModelChoiceField(queryset=Department.objects.all(), required=False)
+
+class ObligationRequestForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = ['obligation_number', 'obr_date', 'expense_class', 'rc_code']
+        widgets = {
+                    'obligation_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Obligation Number'}),
+                    'obr_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+                    'expense_class': forms.TextInput(attrs={'class': 'form-control'}),
+                    'rc_code': forms.TextInput(attrs={'class': 'form-control'}),
+                }
+            
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save(update_fields=['obligation_number', 'obr_date', 'expense_class'])
+        return instance

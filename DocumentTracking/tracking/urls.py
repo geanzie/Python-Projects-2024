@@ -19,6 +19,9 @@ from .views import (
     CheckDocumentStatusUpdates,
     DashboardStatusListView,
     UpdateDVFieldsView,
+    UpdateObligationRequestView,
+    VoucherListView,
+    ResponsibilityCenterListView,
 )
 
 urlpatterns = [
@@ -43,4 +46,7 @@ urlpatterns = [
     path('documents/update-status/<int:pk>/', DocumentUpdateStatusView.as_view(), name='document_update_status'),
     path('documents/check_status_updates/', CheckDocumentStatusUpdates.as_view(), name='check_document_status_updates'),
     path('documents/<str:status>/', DocumentListView.as_view(), name='view_documents_with_status'),  # New pattern
+    path('documents/<int:pk>/update_ob_fields/', UpdateObligationRequestView.as_view(), name='update_ob_fields'),
+     path('vouchers/', VoucherListView.as_view(), name='voucher_list'),
+    path('vouchers/<int:pk>/responsibility-centers/', ResponsibilityCenterListView.as_view(), name='responsibility_center_list'),
 ]

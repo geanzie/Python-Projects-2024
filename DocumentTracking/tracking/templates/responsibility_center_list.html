@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Responsibility Centers for DV Number: {{ document.dv_number }}</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>Responsibility Center</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rc in responsibility_centers %}
+            <tr>
+                <td>{{ rc.rc_code }}</td>
+                <td>{{ rc.amount }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="text-center">No Responsibility Centers found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'voucher_list' %}" class="btn btn-primary btn-sm">Back to Voucher List</a>
+</div>
+{% endblock %}

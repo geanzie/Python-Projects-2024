@@ -42,6 +42,16 @@
                             {% if show_receive_button %}
                                 <!-- Show "Receive" button and "Edit" button if the status is "Returned" -->
                                 <button class="btn btn-primary" id="receiveButton">Receive</button>
+                            {% elif document.can_receive %}
+                                <form action="{% url 'document_received' document.pk %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success">Receive</button>
+                                </form>
+                            {% elif document.document_status == "In Process" and document.forwarded_to.name == "MUNICIPAL ACCOUNTING OFFICE" %}
+                                <a href="{% url 'update_dv_fields' document.id %}" class="btn btn-warning btn-sm">
+                                    Update DV Fields
+                                </a>
+                                <a href="{% url 'document_update_status' document.pk %}" class="btn btn-primary">Update Status</a>
                             {% else %}
                             <a href="{% url 'document_update_status' document.pk %}" class="btn btn-primary">Update Status</a>
                             {% endif %}
@@ -57,6 +67,11 @@
                         {% elif document.document_status == "In Process" and document.forwarded_to.name == "MUNICIPAL ACCOUNTING OFFICE" %}
                             <a href="{% url 'update_dv_fields' document.id %}" class="btn btn-warning btn-sm">
                                 Update DV Fields
+                            </a>
+                            <a href="{% url 'document_update_status' document.pk %}" class="btn btn-primary">Update Status</a>
+                        {% elif not document.initial_department.name == "MUNICIPAL BUDGET'S OFFICE" %}
+                            <a href="{% url 'update_ob_fields' document.id %}" class="btn btn-warning btn-sm">
+                                Update Obligation Request
                             </a>
                             <a href="{% url 'document_update_status' document.pk %}" class="btn btn-primary">Update Status</a>
                         {% else %}

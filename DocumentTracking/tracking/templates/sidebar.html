@@ -30,6 +30,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="{% url 'document_create' %}">
+                    <i class="fas fa-fw fa-plus-circle"></i>
+                    <span>Document Form</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="{% url 'document_search' %}">
                     <i class="fas fa-fw fa-search"></i>
                     <span>Search Document</span>
@@ -39,14 +45,19 @@
                 <a class="nav-link" href="{% url 'document_list' %}">
                     <i class="fas fa-fw fa-folder"></i>
                     <span>Document List</span>
+                    {% if forwarded_documents_count > 0 %}
+                        <span class="badge bg-danger" title="{{ forwarded_documents_count }} new document(s) forwarded to your department">!</span>
+                    {% endif %}
                 </a>
             </li>
+            {% if user_department == "MUNICIPAL ACCOUNTING OFFICE" %}
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'document_create' %}">
-                    <i class="fas fa-fw fa-plus-circle"></i>
-                    <span>Document Form</span>
+                <a class="nav-link" href="{% url 'voucher_list' %}">
+                    <i class="fas fa-fw fa-receipt"></i> <!-- Choose an appropriate icon -->
+                    <span>Voucher List</span>
                 </a>
-            </li>
+            </li>            
+            {% endif %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'document_activity' %}">
                     <i class="fas fa-fw fa-history"></i>

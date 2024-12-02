@@ -17,6 +17,10 @@
                 </thead> 
                 <tbody>
                     <tr>
+                        <td><strong>Disbursement Voucher #:</strong></td>
+                        <td><a href="{% url 'responsibility_center_list' document.pk %}" class="btn btn-info btn-sm">{{ document.dv_number }}</a></td>
+                    </tr>
+                    <tr>
                         <td><strong>Payee:</strong></td>
                         <td>{{ document.payee }}</td>
                     </tr>

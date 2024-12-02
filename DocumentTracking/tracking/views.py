@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from .forms import UserRegistrationForm
+from .forms import UserRegistrationForm, ObligationRequestForm
 from django.views.generic import ListView, DetailView, TemplateView, UpdateView
 from .models import Document, DocumentActivity, DocumentStatus, Department, ResponsibilityCenter
 from django.views import View
@@ -26,6 +26,12 @@ from .models import DocumentActivity
 from django.core.paginator import Paginator
 from datetime import datetime
 from decimal import Decimal
+from django.core.mail import send_mail
+from .models import Notification  # Assuming Notification model exists
+from django.contrib.auth.decorators import login_required
+from twilio.rest import Client  # For SMS
+import requests  # For push notifications
+from django.http import Http404
 
 
 # User Registration View
@@ -141,7 +147,19 @@ class DocumentCreateView(LoginRequiredMixin, CreateView):
                             document=document
                         )
                     print("ResponsibilityCenter entries created")  # Confirm ResponsibilityCenter creation
-                    
+
+                    # Notify if a phone number is provided
+                    if document.phone_number:
+                        self.send_sms(
+                            phone_number=document.phone_number,
+                            message=self.compose_notification_message(
+                                action="Created",
+                                document=document,
+                                forwarded_to=None,
+                                timestamp=document.created_at
+                            )
+                        )
+
                 else:
                     print("Document save failed - No document ID")  # Output error if document not saved
                     raise IntegrityError("Document save failed - No document ID.")
@@ -157,11 +175,15 @@ class DocumentCreateView(LoginRequiredMixin, CreateView):
             print(f"Unexpected error: {ex}")  # Output any other exception
             messages.error(self.request, "An unexpected error occurred while creating the document.")
             return self.form_invalid(form)
+    
+
         
     def get_context_data(self, **kwargs):
         print("Inside get_context_data")  # Check if this method is executed
         context = super().get_context_data(**kwargs)
         context['form'] = DocumentForm()  # Provide a fresh form for the template
+        # Fetch the user's profile
+        context['profile'] = get_object_or_404(Profile, user=self.request.user)
         context['responsibility_centers'] = ResponseCenter.objects.all()  # Include Responsibility Centers
         print("Context data set")  # Confirm context data setup
         return context
@@ -192,7 +214,7 @@ class DocumentEditView(LoginRequiredMixin, UpdateView):
         messages.error(self.request, "There was an error updating the document.")
         return super().form_invalid(form)
 
-    
+
 class DocumentUpdateView(LoginRequiredMixin, View):
     def post(self, request, pk):
         document = get_object_or_404(Document, pk=pk)
@@ -222,6 +244,17 @@ class DocumentUpdateView(LoginRequiredMixin, View):
                 performed_by=request.user,
                 timestamp=document.updated_at
             )
+            # Send notification
+            if document.phone_number:
+                self.send_sms_notification(
+                    phone_number=document.phone_number,
+                    message=self.compose_notification_message(
+                        action="Forwarded",
+                        document=document,
+                        forwarded_to=forwarded_to_department,
+                        timestamp=document.updated_at
+                    )
+                )
 
         elif status == 'Returned':
             # Handle return logic
@@ -242,6 +275,17 @@ class DocumentUpdateView(LoginRequiredMixin, View):
                 performed_by=request.user,
                 timestamp=document.updated_at
             )
+            # Send notification
+            if document.phone_number:
+                self.send_sms_notification(
+                    phone_number=document.phone_number,
+                    message=self.compose_notification_message(
+                        action="Returned",
+                        document=document,
+                        forwarded_to=None,
+                        timestamp=document.updated_at
+                    )
+                )
 
         else:
             # Update status directly in the DocumentStatus table for the current department
@@ -275,6 +319,7 @@ class DocumentUpdateView(LoginRequiredMixin, View):
         # Default to initial department if no history is found
         return document.initial_department
 
+    
         
 class DocumentListView(LoginRequiredMixin, ListView):
     model = Document
@@ -326,7 +371,7 @@ class DocumentListView(LoginRequiredMixin, ListView):
 
             # Set the `can_receive` flag for receiving documents in the 'Forwarded' state
             if latest_status and latest_status.status == 'Forwarded':
-                document.can_receive = document.forwarded_to == user_department
+                document.can_receive = user_department in [document.forwarded_to, document.initial_department]
             elif latest_status and latest_status.status == 'Received':
                 document.can_update_status = document.forwarded_to == user_department
             else:
@@ -856,6 +901,13 @@ class UpdateDVFieldsView(LoginRequiredMixin, View):
             document.save()
             print("Document saved with updated percentage fields.")
 
+            DocumentActivity.objects.create(
+                document=document,
+                action="Voucher Updated",
+                performed_by=self.request.user,
+                timestamp=document.created_at
+                )
+            print("DocumentActivity entry created")  # Confirm DocumentActivity creation
             return redirect('document_list')
         else:
             print("Form is invalid. Errors:", form.errors)
@@ -878,3 +930,128 @@ class CheckDocumentStatusUpdates(LoginRequiredMixin, View):
 
         # Convert queryset to list to return as JSON response
         return JsonResponse(list(recent_status_updates), safe=False)
+    
+#Updating Obligation Requests
+class UpdateObligationRequestView(LoginRequiredMixin, UpdateView):
+    model = Document
+    form_class = DocumentForm
+    template_name = 'update_obligation_request.html'
+    success_url = reverse_lazy('document_list')
+
+    def get_object(self, queryset=None):
+        # Ensure the document exists
+        document = get_object_or_404(Document, pk=self.kwargs['pk'])
+
+        if document.initial_department.name != "MUNICIPAL BUDGET'S OFFICE":
+            return document
+        raise Http404("Document cannot be updated by this department.")
+
+
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                document = form.save(commit=False)
+
+                # Preserve existing values for fields we don't want to change
+                existing_payee = document.payee
+                existing_description = document.description
+                existing_phone_number = document.phone_number
+
+                # Update only the specific fields related to the obligation request
+                document.obligation_number = form.cleaned_data.get('obligation_number')
+                document.obr_date = form.cleaned_data.get('obr_date')
+                document.expense_class = form.cleaned_data.get('expense_class')
+
+                # Capture values from HTML (the form's POST data)
+                document.payee = self.request.POST.get('payee', existing_payee)
+                document.description = self.request.POST.get('description', existing_description)
+                document.phone_number = self.request.POST.get('phone_number', existing_phone_number)
+                print(f"{existing_payee} - {existing_description} - {existing_phone_number}")
+
+                # Save the document and update the specific fields
+                document.save(update_fields=['obligation_number', 'obr_date', 'expense_class', 'payee', 'description', 'phone_number'])
+              
+                # Retrieve responsibility centers from the POST data
+                responsibility_centers = self.request.POST.getlist('responsibility_center[]')
+                amounts = self.request.POST.getlist('amount[]')
+
+                if len(responsibility_centers) != len(amounts):
+                    form.add_error(None, "Responsibility centers and amounts must match.")
+                    return self.form_invalid(form)
+
+                # If the data exists, proceed with saving ResponsibilityCenter
+                if responsibility_centers and amounts:
+                    for rc_code, amount in zip(responsibility_centers, amounts):
+                        ResponsibilityCenter.objects.create(
+                            rc_code=rc_code.strip(),  # Ensure no trailing spaces
+                            amount=amount,
+                            document=document # Associate with the current document instance
+                        )
+                    print("ResponsibilityCenter entries created")
+
+                DocumentActivity.objects.create(
+                    document=document,
+                    action="Obligation Updated",
+                    performed_by=self.request.user,
+                    timestamp=document.created_at
+                    )
+                print("DocumentActivity entry created")  # Confirm DocumentActivity creation
+
+                return super().form_valid(form)
+        
+        except Exception as e:
+            print(f"Error in form_valid: {e}")
+            return self.form_invalid(form)
+        
+    def get_context_data(self, **kwargs):
+        # Add extra context to the template
+        context = super().get_context_data(**kwargs)
+        document = self.get_object()
+
+        # Pass payee, description, and phone_number to the context
+        context['payee'] = document.payee
+        context['description'] = document.description
+        context['phone_number'] = document.phone_number
+
+        # Make sure the form is available in context as well
+        context['form'] = DocumentForm(instance=document)
+        return context
+    
+    def form_invalid(self, form):
+        print("POST data:", self.request.POST)
+        print("Form errors:", form.errors)
+        return super().form_invalid(form)
+
+
+    def get_context_data(self, **kwargs):
+        # Add extra context to the template
+        context = super().get_context_data(**kwargs)
+        context['form'] = DocumentForm()  # Provide a fresh form for the template
+        context['responsibility_centers'] = ResponseCenter.objects.all()  # Include Responsibility Centers
+        print("Context data set, OB Updating")  # Confirm context data setup
+        return context
+    
+class VoucherListView(LoginRequiredMixin, ListView):
+    model = Document
+    template_name = 'voucher_list.html'
+    context_object_name = 'documents'
+    paginate_by = 10  # Set the number of items per page
+
+    def get_queryset(self):
+        sort_field = self.request.GET.get('sort', 'created_at')  # Default to created_at
+        return Document.objects.all().order_by(f'-{sort_field}')
+    
+class ResponsibilityCenterListView(LoginRequiredMixin, ListView):
+    template_name = 'responsibility_center_list.html'
+    context_object_name = 'responsibility_centers'
+
+    def get_queryset(self):
+        # Get the specific document and its related responsibility centers
+        document_id = self.kwargs.get('pk')
+        document = get_object_or_404(Document, pk=document_id)
+        return ResponsibilityCenter.objects.filter(document=document)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['document'] = get_object_or_404(Document, pk=self.kwargs.get('pk'))
+        return context

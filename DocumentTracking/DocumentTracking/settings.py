@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'simple_history',
     'bootstrap4',
     'bootstrap5',
+    'phonenumber_field',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -72,6 +74,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                 # Add your custom context processor
+                'tracking.context_processors.department_notifications',
+                'tracking.context_processors.user_department',
             ],
         },
     },

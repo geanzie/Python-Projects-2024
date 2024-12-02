@@ -43,26 +43,58 @@
             {% include 'footer.html' %}
         </div>
     </div>
+    <div class="modal fade" id="notificationModal" tabindex="-1" role="dialog" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationModalLabel">Action Required</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>The following documents have been in your department for over 24 hours without action:</p>
+                    <ul>
+                        {% for document in inactive_documents %}
+                            <li>{{ document.document.title }} (Forwarded on {{ document.timestamp|date:"M d, Y H:i" }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Dismiss</button>
+                    <a href="{% url 'document_list' %}" class="btn btn-primary">View Documents</a>
+                </div>
+            </div>
+        </div>
+    </div>   
 
     <script>
-        window.onbeforeunload = function() {
-            // Send an AJAX request to logout the user when the page is about to be unloaded
-            fetch('/logout/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',  // Ensure the CSRF token is included
-                },
-                body: JSON.stringify({})  // Send an empty body (since logout doesn't need any data)
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Logged out successfully');
-                }
-            }).catch(error => {
-                console.error('Error logging out:', error);
-            });
-        };
-    </script>    
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check for inactive documents and show the modal if needed
+            const inactiveDocuments = {{ inactive_documents|length }};
+            if (inactiveDocuments > 0) {
+                $('#notificationModal').modal('show');
+            }
+    
+            // Handle user logout on page unload
+            window.onbeforeunload = function () {
+                fetch('/logout/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',  // Ensure the CSRF token is included
+                    },
+                    body: JSON.stringify({})  // Send an empty body (since logout doesn't need any data)
+                }).then(response => {
+                    if (response.ok) {
+                        console.log('Logged out successfully');
+                    }
+                }).catch(error => {
+                    console.error('Error logging out:', error);
+                });
+            };
+        });
+    </script>      
 </body>
 
 </html>
